@@ -842,9 +842,6 @@ function sanitizeId(str) {
   return str.replace(/[^a-zA-Z0-9]/g, '_');
 }
 
-const aiDebounceTimers = {};
-const aiLastText = {};
-
 function crearMatrizCard(rol) {
   const container = document.getElementById('matriz-cards');
   const id = sanitizeId(rol);
@@ -862,7 +859,7 @@ function crearMatrizCard(rol) {
   const camposHTML = campos.map(c => `
     <div class="m-field field">
       <label>${c.label} <span class="${c.tag}">${c.tagLabel}</span></label>
-      <textarea id="m${c.key}-${id}" placeholder="${c.placeholder}" oninput="syncMatriz();scheduleAiFeedback('${id}','${c.key}',this.value,'${rol}')"></textarea>
+      <textarea id="m${c.key}-${id}" data-mid="${id}" data-mkey="${c.key}" data-mrol="${rol.replace(/"/g,'&quot;')}" placeholder="${c.placeholder}" oninput="syncMatriz();scheduleAiFeedback(this.dataset.mid,this.dataset.mkey,this.value,this.dataset.mrol)"></textarea>
       <div class="ai-feedback-panel" id="afp-${c.key}-${id}">
         <div class="ai-feedback-hdr">
           <div class="ai-feedback-hdr-icon">
@@ -887,7 +884,7 @@ function crearMatrizCard(rol) {
       <div class="matriz-cols">${camposHTML}</div>
       <div class="m-field field" style="margin-top:10px">
         <label>Resultados cuantitativos esperados <span class="tag-r">Resultados</span></label>
-        <textarea id="mr-${id}" style="min-height:60px" placeholder="Ej: Reducción del 30% en ciclo de ventas, aumento de conversión del 20%..." oninput="syncMatriz();scheduleAiFeedback('${id}','r',this.value,'${rol}')"></textarea>
+        <textarea id="mr-${id}" data-mid="${id}" data-mkey="r" data-mrol="${rol.replace(/"/g,'&quot;')}" style="min-height:60px" placeholder="Ej: Reducción del 30% en ciclo de ventas, aumento de conversión del 20%..." oninput="syncMatriz();scheduleAiFeedback(this.dataset.mid,this.dataset.mkey,this.value,this.dataset.mrol)"></textarea>
         <div class="ai-feedback-panel" id="afp-r-${id}">
           <div class="ai-feedback-hdr">
             <div class="ai-feedback-hdr-icon">
@@ -1050,6 +1047,7 @@ Responde SOLO en JSON sin backticks:
     const pct = Math.round((score / 10) * 100);
 
     const fieldId = `m${campoKey}-${matrizId}`;
+    const storeKey = fieldId + '_sugg';
 
     let html = `
       <div class="ai-feedback-score ${scoreClass}">
@@ -1060,13 +1058,14 @@ Responde SOLO en JSON sin backticks:
     `;
 
     if (parsed.sugerencia) {
-      const escapedSugg = parsed.sugerencia.replace(/'/g, "\\'").replace(/\n/g, '\\n');
+      window._aiSuggestions = window._aiSuggestions || {};
+      window._aiSuggestions[storeKey] = parsed.sugerencia;
       html += `
         <div class="ai-feedback-suggestion">
           <div class="ai-feedback-suggestion-label">✦ Versión sugerida</div>
-          ${parsed.sugerencia.replace(/\n/g, '<br>')}
+          ${parsed.sugerencia.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}
           <br>
-          <button class="btn-apply-suggestion" onclick="applySuggestion('${fieldId}','${escapedSugg}','${matrizId}')">Aplicar esta versión</button>
+          <button class="btn-apply-suggestion" onclick="applySuggestion('${fieldId}','${storeKey}','${campoKey}','${matrizId}')">Aplicar esta versión</button>
         </div>
       `;
     }
@@ -1078,13 +1077,12 @@ Responde SOLO en JSON sin backticks:
   }
 }
 
-function applySuggestion(fieldId, suggestion, matrizId) {
+function applySuggestion(fieldId, storeKey, campoKey, matrizId) {
   const field = document.getElementById(fieldId);
-  if (field) {
-    field.value = suggestion.replace(/\\n/g, '\n');
+  const suggestion = (window._aiSuggestions || {})[storeKey];
+  if (field && suggestion) {
+    field.value = suggestion;
     syncMatriz();
-    const campoKey = fieldId.replace('m','').replace('-'+matrizId,'');
-    const panel = document.getElementById(`afp-${campoKey}-${matrizId}`);
     const content = document.getElementById(`afc-${campoKey}-${matrizId}`);
     if (content) content.innerHTML = '<span style="font-size:12px;color:var(--success)">✓ Versión aplicada. Puedes seguir editando.</span>';
   }
