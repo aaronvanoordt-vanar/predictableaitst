@@ -5,7 +5,7 @@
 // como Web App.
 // ───────────────────────────────────────────────────────────
 window.PREDICTABLE_CONFIG = {
-  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxXXXXXXXXXXXXXXXXXXXXXXXXXX/exec",
+  APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxWQsb07WZxqbqld04M4rLIQRypONsY7s3EIczFBpV6PvIHDbSrSnfLp4nohLJTBG4jmw/exec",
 
   // Timeout defensivo para llamadas (ms)
   REQUEST_TIMEOUT_MS: 60000,
