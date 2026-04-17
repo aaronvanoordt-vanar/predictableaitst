@@ -1780,7 +1780,10 @@ textarea { resize:vertical; min-height:76px; }
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
         <div>
           <div style="font-family:var(--font-display);font-size:15px;font-weight:800">Resultados de búsqueda</div>
-          <div id="results-meta" style="font-family:var(--font-mono);font-size:10px;color:var(--text3);margin-top:3px">— contactos encontrados</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:3px;flex-wrap:wrap">
+            <div id="results-meta" style="font-family:var(--font-mono);font-size:10px;color:var(--text3)">— contactos encontrados</div>
+            <a id="apollo-search-link" href="#" target="_blank" style="display:none;font-family:var(--font-mono);font-size:10px;color:var(--teal);text-decoration:none;border:1px solid rgba(0,196,212,.3);padding:2px 8px;border-radius:4px">🔗 Ver en Apollo →</a>
+          </div>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="selectAll(true)">☑ Todos</button>
@@ -2818,10 +2821,27 @@ async function runApolloSearch() {
     if(meta) meta.textContent = `${people.length} de ${total.toLocaleString()} contactos encontrados`;
 
     apolloState.selected = new Set();
+    apolloState.lastPayload = payload;
     renderResultsTable();
     if(sf) sf.style.display = 'none';
     const sr = document.getElementById('section-results');
     if(sr) { sr.style.display='block'; sr.classList.add('fade-in'); }
+
+    // Build Apollo deep link so user can save the search there
+    const link = document.getElementById('apollo-search-link');
+    if(link) {
+      const p = payload;
+      let q = 'sortAscending=false&sortByField=recommendations_score';
+      (p.person_titles||[]).forEach(t => q += `&personTitles[]=${encodeURIComponent(t)}`);
+      (p.person_seniorities||[]).forEach(s => q += `&personSeniorities[]=${encodeURIComponent(s)}`);
+      (p.person_locations||[]).forEach(l => q += `&personLocations[]=${encodeURIComponent(l)}`);
+      (p.organization_locations||[]).forEach(l => q += `&organizationLocations[]=${encodeURIComponent(l)}`);
+      (p.organization_num_employees_ranges||[]).forEach(r => q += `&organizationNumEmployeesRanges[]=${encodeURIComponent(r)}`);
+      link.href = `https://app.apollo.io/#/people?${q}`;
+      link.style.display = 'inline-flex';
+      link.title = `Abre Apollo People con estos filtros → haz clic en "Save as new view" para guardarla`;
+    }
+
     advanceStep(3);
     updateSelectionUI();
 
