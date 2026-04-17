@@ -2804,7 +2804,15 @@ function saveToApollo() {
     if(btn) { btn.textContent='✓ Guardado en Apollo'; btn.classList.remove('saving'); btn.style.background='var(--grad-jade)'; }
     const se = document.getElementById('section-enrich');
     if(se) { se.style.display='block'; se.classList.add('fade-in'); se.scrollIntoView({behavior:'smooth', block:'start'}); }
-    const ec = document.getElementById('enrich-count'); if(ec) ec.textContent = apolloState.saved.length;
+    const n = apolloState.saved.length;
+    const batches = Math.ceil(n / 10);
+    const ec = document.getElementById('enrich-count'); if(ec) ec.textContent = n;
+    const ebc = document.getElementById('enrich-batch-count'); if(ebc) ebc.textContent = `${n} contactos`;
+    const bn = document.getElementById('batch-num'); if(bn) bn.textContent = batches;
+    const ce = document.getElementById('credit-estimate'); if(ce) ce.textContent = n;
+    const ew = document.getElementById('enrich-warning'); if(ew && n > 0) ew.style.display='block';
+    const eb = document.getElementById('btn-enrich');
+    if(eb && n > 0) { eb.disabled=false; eb.style.opacity='1'; eb.style.cursor='pointer'; }
     const cl = document.getElementById('enrich-contact-list');
     if(cl) cl.innerHTML = apolloState.saved.map(l=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:18px">👤</span><div><strong style="font-size:13px">${l.name}</strong><br><span style="font-size:11px;color:var(--text3)">${l.title} · ${l.company}</span></div><span style="margin-left:auto;font-size:11px;font-family:var(--font-mono);color:var(--text3)">📧 ${l.email}</span></div>`).join('');
     advanceStep(5);
