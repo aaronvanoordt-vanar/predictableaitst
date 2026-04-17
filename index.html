@@ -2682,7 +2682,7 @@ function switchMsgTab(el, tabId) {
 const apolloState = { results:[], selected: new Set(), saved:[], savedListName:'' };
 
 // ── APOLLO API ──
-const APOLLO_KEY  = 'GJhODHZj1VvjE9H1TdD_KA';
+const APOLLO_KEY  = 'sQAAncojXI8VIRWgWr9ZYA';
 const _isLocal = ['localhost','127.0.0.1'].includes(window.location.hostname);
 const APOLLO_BASE = _isLocal ? '/proxy/apollo' : 'https://api.apollo.io/api/v1';
 function getApolloKey(){ try{ return localStorage.getItem('apollo_api_key')||APOLLO_KEY; }catch(e){ return APOLLO_KEY; } }
@@ -2772,7 +2772,7 @@ async function runApolloSearch() {
   const perPage   = Math.min(parseInt(document.getElementById('f-volume')?.value||'25'), 100);
 
   try {
-    const data = await apolloFetch('/mixed_people/search', {
+    const data = await apolloFetch('/mixed_people/api_search', {
       page: 1, per_page: perPage,
       person_titles: titles,
       person_seniorities: seniority,
