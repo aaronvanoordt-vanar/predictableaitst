@@ -6,313 +6,598 @@
 <title>predictable.ai — Revenue OS</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  :root {
-    --bg: #070C18;
-    --surface: #0D1424;
-    --surface2: #131D30;
-    --surface3: #1A2540;
-    --border: #1E2D47;
-    --border2: #243355;
-    --text: #E8EDF8;
-    --text2: #8A9BBF;
-    --text3: #4E5F7A;
-    --blue: #4F8EF7;
-    --blue-dim: rgba(79,142,247,0.12);
-    --purple: #7C5CFC;
-    --purple-dim: rgba(124,92,252,0.12);
-    --green: #10B981;
-    --green-dim: rgba(16,185,129,0.12);
-    --amber: #F59E0B;
-    --red: #EF4444;
-    --gradient-blue: linear-gradient(135deg, #4F8EF7, #2563EB);
-    --gradient-purple: linear-gradient(135deg, #7C5CFC, #5B21B6);
-    --gradient-green: linear-gradient(135deg, #10B981, #059669);
-    --radius: 12px;
-    --radius-sm: 8px;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { background:var(--bg); color:var(--text); font-family:'Inter','Segoe UI',system-ui,sans-serif; min-height:100vh; display:flex; overflow:hidden; }
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
 
-  /* ── SIDEBAR ── */
-  .sidebar {
-    width: 240px; min-width:240px; background:var(--surface); border-right:1px solid var(--border);
-    display:flex; flex-direction:column; height:100vh; position:fixed; left:0; top:0; z-index:100;
-  }
-  .sidebar-logo {
-    padding:20px 20px 16px; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:10px;
-  }
-  .logo-icon {
-    width:32px; height:32px; border-radius:8px; background:var(--gradient-blue);
-    display:flex; align-items:center; justify-content:center; font-weight:900; font-size:14px; color:#fff;
-  }
-  .logo-text { font-size:16px; font-weight:700; color:var(--text); }
-  .logo-sub { font-size:10px; color:var(--text3); letter-spacing:.5px; text-transform:uppercase; margin-top:1px; }
-  .sidebar-section { padding:16px 12px 4px; font-size:10px; color:var(--text3); letter-spacing:.8px; text-transform:uppercase; font-weight:600; }
-  .nav-item {
-    display:flex; align-items:center; gap:10px; padding:9px 12px; margin:1px 8px; border-radius:8px;
-    cursor:pointer; font-size:13px; color:var(--text2); transition:.15s; user-select:none;
-  }
-  .nav-item:hover { background:var(--surface2); color:var(--text); }
-  .nav-item.active { background:var(--blue-dim); color:var(--blue); }
-  .nav-item.active.m2 { background:var(--purple-dim); color:var(--purple); }
-  .nav-item.active.m3 { background:var(--green-dim); color:var(--green); }
-  .nav-icon { width:16px; height:16px; flex-shrink:0; }
-  .nav-badge {
-    margin-left:auto; font-size:10px; padding:2px 6px; border-radius:99px; font-weight:600;
-    background:var(--blue-dim); color:var(--blue);
-  }
-  .nav-badge.purple { background:var(--purple-dim); color:var(--purple); }
-  .nav-badge.green { background:var(--green-dim); color:var(--green); }
-  .sidebar-footer { margin-top:auto; padding:16px; border-top:1px solid var(--border); }
-  .user-pill {
-    display:flex; align-items:center; gap:10px; padding:8px; border-radius:8px;
-    cursor:pointer; transition:.15s;
-  }
-  .user-pill:hover { background:var(--surface2); }
-  .avatar { width:30px; height:30px; border-radius:50%; background:var(--gradient-blue); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; }
-  .user-name { font-size:13px; font-weight:600; }
-  .user-role { font-size:11px; color:var(--text3); }
+:root {
+  --bg:       #07080B;
+  --surface:  #0C0E14;
+  --surface2: #11141C;
+  --surface3: #181C26;
+  --border:   #1C2030;
+  --border2:  #252A3A;
+  --text:     #E6EAF4;
+  --text2:    #7A8299;
+  --text3:    #3D4358;
 
-  /* ── MAIN ── */
-  .main { margin-left:240px; flex:1; height:100vh; overflow-y:auto; display:flex; flex-direction:column; }
-  .topbar {
-    padding:16px 28px; border-bottom:1px solid var(--border); display:flex; align-items:center;
-    gap:16px; background:var(--bg); position:sticky; top:0; z-index:50;
-  }
-  .topbar-title { font-size:18px; font-weight:700; }
-  .topbar-sub { font-size:12px; color:var(--text3); margin-top:2px; }
-  .topbar-actions { margin-left:auto; display:flex; gap:8px; }
-  .btn {
-    padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
-    border:none; transition:.15s; display:inline-flex; align-items:center; gap:6px;
-  }
-  .btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border); }
-  .btn-ghost:hover { border-color:var(--border2); color:var(--text); }
-  .btn-primary { background:var(--gradient-blue); color:#fff; }
-  .btn-primary:hover { opacity:.9; }
-  .btn-purple { background:var(--gradient-purple); color:#fff; }
-  .btn-purple:hover { opacity:.9; }
-  .btn-green { background:var(--gradient-green); color:#fff; }
-  .btn-green:hover { opacity:.9; }
-  .btn-sm { padding:6px 12px; font-size:12px; }
+  --gold:         #D4920A;
+  --gold-bright:  #F0A820;
+  --gold-dim:     rgba(212,146,10,0.10);
+  --gold-glow:    rgba(212,146,10,0.18);
 
-  /* ── PAGE CONTENT ── */
-  .page { padding:28px; display:none; flex-direction:column; gap:24px; }
-  .page.active { display:flex; }
+  --teal:      #00C4D4;
+  --teal-dim:  rgba(0,196,212,0.10);
+  --teal-glow: rgba(0,196,212,0.16);
 
-  /* ── CARDS ── */
-  .card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:20px; flex:1;
-  }
-  .card-title { font-size:13px; font-weight:600; color:var(--text2); margin-bottom:4px; }
-  .card-value { font-size:28px; font-weight:700; }
-  .card-delta { font-size:12px; margin-top:4px; }
-  .delta-up { color:var(--green); }
-  .delta-down { color:var(--red); }
-  .row { display:flex; gap:16px; }
-  .col { display:flex; flex-direction:column; gap:16px; flex:1; }
+  --jade:      #00C878;
+  --jade-dim:  rgba(0,200,120,0.10);
+  --jade-glow: rgba(0,200,120,0.16);
 
-  /* ── MODULE HEADER ── */
-  .module-header {
-    padding:24px 28px; background:var(--surface); border-bottom:1px solid var(--border);
-    display:flex; align-items:center; gap:16px;
-  }
-  .module-badge {
-    padding:6px 14px; border-radius:99px; font-size:11px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
-  }
-  .badge-blue { background:var(--blue-dim); color:var(--blue); }
-  .badge-purple { background:var(--purple-dim); color:var(--purple); }
-  .badge-green { background:var(--green-dim); color:var(--green); }
+  --red:       #E84040;
+  --amber:     #D4920A;
 
-  /* ── STAT GRID ── */
-  .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-  .stat-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:18px 20px;
-  }
-  .stat-label { font-size:12px; color:var(--text3); font-weight:500; margin-bottom:6px; }
-  .stat-val { font-size:26px; font-weight:800; line-height:1; }
-  .stat-sub { font-size:11px; color:var(--text3); margin-top:6px; }
+  --font-display: 'Syne', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+  --font-body:    'DM Sans', sans-serif;
 
-  /* ── CHART CARD ── */
-  .chart-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;
-  }
-  .chart-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-  .chart-title { font-size:14px; font-weight:700; }
-  .chart-wrap { position:relative; height:220px; }
+  --r:    10px;
+  --r-sm: 6px;
 
-  /* ── TABLE ── */
-  .table-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
-  .table-head { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
-  table { width:100%; border-collapse:collapse; }
-  th { padding:10px 16px; font-size:11px; font-weight:600; color:var(--text3); text-align:left; letter-spacing:.5px; text-transform:uppercase; border-bottom:1px solid var(--border); }
-  td { padding:12px 16px; font-size:13px; border-bottom:1px solid var(--border); color:var(--text); }
-  tr:last-child td { border-bottom:none; }
-  tr:hover td { background:var(--surface2); }
-  .pill { display:inline-flex; align-items:center; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:600; }
-  .pill-blue { background:var(--blue-dim); color:var(--blue); }
-  .pill-purple { background:var(--purple-dim); color:var(--purple); }
-  .pill-green { background:var(--green-dim); color:var(--green); }
-  .pill-amber { background:rgba(245,158,11,.12); color:var(--amber); }
-  .pill-red { background:rgba(239,68,68,.12); color:var(--red); }
-  .pill-gray { background:var(--surface3); color:var(--text3); }
+  --grad-gold:  linear-gradient(135deg,#D4920A,#9A6300);
+  --grad-teal:  linear-gradient(135deg,#00C4D4,#007A88);
+  --grad-jade:  linear-gradient(135deg,#00C878,#007A48);
+}
 
-  /* ── FORM ── */
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .form-group { display:flex; flex-direction:column; gap:6px; }
-  .form-group.full { grid-column:1/-1; }
-  label { font-size:12px; font-weight:600; color:var(--text2); }
-  input, select, textarea {
-    background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm);
-    color:var(--text); padding:10px 12px; font-size:13px; outline:none; font-family:inherit;
-    transition:.15s;
-  }
-  input:focus, select:focus, textarea:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(79,142,247,.15); }
-  select option { background:var(--surface2); }
-  textarea { resize:vertical; min-height:80px; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-  /* ── STEPS ── */
-  .steps { display:flex; gap:0; margin-bottom:24px; }
-  .step {
-    flex:1; padding:12px 16px; background:var(--surface); border:1px solid var(--border);
-    display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--text3);
-    position:relative; cursor:pointer;
-  }
-  .step:not(:last-child)::after {
-    content:'›'; position:absolute; right:-8px; top:50%; transform:translateY(-50%);
-    color:var(--border2); font-size:18px; z-index:1;
-  }
-  .step:first-child { border-radius:var(--radius) 0 0 var(--radius); }
-  .step:last-child { border-radius:0 var(--radius) var(--radius) 0; }
-  .step.active { background:var(--blue-dim); border-color:var(--blue); color:var(--blue); }
-  .step.done { background:var(--green-dim); border-color:var(--green); color:var(--green); }
-  .step-num {
-    width:20px; height:20px; border-radius:50%; background:var(--surface3);
-    display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0;
-  }
-  .step.active .step-num { background:var(--blue); color:#fff; }
-  .step.done .step-num { background:var(--green); color:#fff; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 14px;
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
 
-  /* ── INSIGHT CARDS ── */
-  .insight-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-  .insight-card {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    padding:18px; display:flex; flex-direction:column; gap:10px;
-  }
-  .insight-icon { font-size:22px; }
-  .insight-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text3); }
-  .insight-title { font-size:14px; font-weight:700; line-height:1.3; }
-  .insight-body { font-size:12px; color:var(--text2); line-height:1.6; }
-  .insight-action {
-    margin-top:4px; padding:8px 12px; border-radius:var(--radius-sm); font-size:11px; font-weight:700;
-    text-transform:uppercase; letter-spacing:.5px; cursor:pointer; border:none; transition:.15s;
-  }
-  .action-blue { background:var(--blue-dim); color:var(--blue); }
-  .action-blue:hover { background:rgba(79,142,247,.2); }
+/* dot-grid background */
+body::before {
+  content:'';
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image: radial-gradient(circle, #1e2336 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: .45;
+}
 
-  /* ── PIPELINE ── */
-  .pipeline { display:flex; gap:12px; overflow-x:auto; padding-bottom:4px; }
-  .pipeline-col {
-    min-width:200px; background:var(--surface2); border-radius:var(--radius);
-    border:1px solid var(--border); overflow:hidden;
-  }
-  .pipeline-header { padding:10px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; }
-  .pipeline-card {
-    margin:8px; padding:10px 12px; background:var(--surface); border:1px solid var(--border);
-    border-radius:var(--radius-sm); cursor:pointer; transition:.15s;
-  }
-  .pipeline-card:hover { border-color:var(--blue); }
-  .pipeline-card-name { font-size:12px; font-weight:600; }
-  .pipeline-card-sub { font-size:11px; color:var(--text3); margin-top:3px; }
-  .pipeline-card-val { font-size:13px; font-weight:700; margin-top:6px; color:var(--blue); }
+/* ── SIDEBAR ── */
+.sidebar {
+  width:228px; min-width:228px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display:flex; flex-direction:column;
+  height:100vh; position:fixed; left:0; top:0; z-index:100;
+}
 
-  /* ── MEETING UI ── */
-  .meeting-layout { display:grid; grid-template-columns:1fr 320px; gap:16px; height:calc(100vh - 200px); }
-  .meeting-main { display:flex; flex-direction:column; gap:12px; }
-  .meeting-video {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
-    flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:12px;
-    min-height:300px;
-  }
-  .meeting-controls { display:flex; gap:8px; justify-content:center; }
-  .ctrl-btn {
-    width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; font-size:16px; transition:.15s;
-    background:var(--surface2); color:var(--text); border:1px solid var(--border);
-  }
-  .ctrl-btn:hover { background:var(--surface3); }
-  .ctrl-btn.danger { background:rgba(239,68,68,.15); color:var(--red); border-color:rgba(239,68,68,.3); }
-  .ctrl-btn.active { background:var(--blue-dim); color:var(--blue); border-color:var(--blue); }
-  .ai-panel { display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
-  .ai-suggestion {
-    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px;
-  }
-  .ai-tag { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px; }
-  .ai-text { font-size:12px; color:var(--text2); line-height:1.6; }
-  .ai-copy { font-size:11px; padding:6px 10px; border-radius:6px; cursor:pointer; border:none; margin-top:8px; background:var(--surface3); color:var(--text2); }
-  .ai-copy:hover { background:var(--border); color:var(--text); }
+.sidebar-logo {
+  padding: 22px 18px 18px;
+  border-bottom: 1px solid var(--border);
+  display:flex; align-items:center; gap:11px;
+}
 
-  /* ── SCORE BAR ── */
-  .score-row { display:flex; flex-direction:column; gap:4px; }
-  .score-label { display:flex; justify-content:space-between; font-size:12px; }
-  .score-bar { height:6px; background:var(--surface3); border-radius:3px; overflow:hidden; }
-  .score-fill { height:100%; border-radius:3px; transition:width .8s ease; }
+.logo-icon {
+  width:30px; height:30px; border-radius:7px;
+  background: var(--grad-gold);
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-display); font-weight:800; font-size:13px; color:#fff;
+  box-shadow: 0 0 16px var(--gold-glow);
+}
 
-  /* ── TABS ── */
-  .tabs { display:flex; gap:2px; background:var(--surface2); padding:4px; border-radius:10px; width:fit-content; }
-  .tab { padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer; color:var(--text3); transition:.15s; }
-  .tab.active { background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.3); }
+.logo-text {
+  font-family: var(--font-display);
+  font-size:15px; font-weight:700; color:var(--text); letter-spacing:-.3px;
+}
+.logo-sub {
+  font-family: var(--font-mono);
+  font-size:9px; color:var(--text3); letter-spacing:.8px; text-transform:uppercase; margin-top:2px;
+}
 
-  /* ── EMPTY STATE ── */
-  .empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:60px 20px; color:var(--text3); text-align:center; }
-  .empty-icon { font-size:40px; opacity:.4; }
-  .empty-title { font-size:15px; font-weight:700; color:var(--text2); }
-  .empty-sub { font-size:13px; max-width:340px; line-height:1.6; }
+.sidebar-section {
+  padding: 18px 14px 5px;
+  font-family: var(--font-mono);
+  font-size:9px; color:var(--text3);
+  letter-spacing:1px; text-transform:uppercase; font-weight:600;
+}
 
-  /* ── PROGRESS RING ── */
-  .ring-wrap { position:relative; width:80px; height:80px; }
-  .ring-wrap svg { transform:rotate(-90deg); }
-  .ring-val { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:16px; font-weight:800; }
+.nav-item {
+  display:flex; align-items:center; gap:9px;
+  padding:8px 12px; margin:1px 6px;
+  border-radius:var(--r-sm);
+  cursor:pointer; font-size:12.5px; color:var(--text2);
+  transition: all .14s; user-select:none;
+  border-left: 2px solid transparent;
+  position:relative;
+}
+.nav-item:hover { background:var(--surface2); color:var(--text); }
 
-  /* ── SCROLLBAR ── */
-  ::-webkit-scrollbar { width:6px; height:6px; }
-  ::-webkit-scrollbar-track { background:transparent; }
-  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+.nav-item.active {
+  background: var(--gold-dim);
+  color: var(--gold-bright);
+  border-left-color: var(--gold);
+}
+.nav-item.active.m2 {
+  background: var(--teal-dim);
+  color: var(--teal);
+  border-left-color: var(--teal);
+}
+.nav-item.active.m3 {
+  background: var(--jade-dim);
+  color: var(--jade);
+  border-left-color: var(--jade);
+}
 
-  /* ── TOGGLE ── */
-  .toggle-wrap { display:flex; align-items:center; gap:8px; cursor:pointer; }
-  .toggle { width:36px; height:20px; background:var(--surface3); border-radius:10px; position:relative; transition:.2s; }
-  .toggle.on { background:var(--blue); }
-  .toggle::after { content:''; position:absolute; top:3px; left:3px; width:14px; height:14px; background:#fff; border-radius:50%; transition:.2s; }
-  .toggle.on::after { left:19px; }
+.nav-icon { width:14px; height:14px; flex-shrink:0; opacity:.7; }
+.nav-item.active .nav-icon, .nav-item:hover .nav-icon { opacity:1; }
 
-  /* ── NOTIFICATION DOT ── */
-  .notif { width:8px; height:8px; border-radius:50%; background:var(--blue); }
+.nav-badge {
+  margin-left:auto;
+  font-family: var(--font-mono);
+  font-size:9px; padding:2px 6px; border-radius:99px; font-weight:700;
+  background:var(--gold-dim); color:var(--gold);
+}
+.nav-badge.teal { background:var(--teal-dim); color:var(--teal); }
+.nav-badge.jade { background:var(--jade-dim); color:var(--jade); }
 
-  /* ── MODULE INTRO ── */
-  .module-intro {
-    background: linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%);
-    border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 28px; display: flex; align-items: center; gap: 24px;
-  }
-  .module-intro-icon {
-    width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center;
-    justify-content: center; font-size: 28px; flex-shrink: 0;
-  }
-  .module-intro-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
-  .module-intro-desc { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 600px; }
+.sidebar-footer {
+  margin-top:auto; padding:14px;
+  border-top:1px solid var(--border);
+}
+.user-pill {
+  display:flex; align-items:center; gap:10px;
+  padding:8px; border-radius:var(--r-sm);
+  cursor:pointer; transition:.14s;
+}
+.user-pill:hover { background:var(--surface2); }
+.avatar {
+  width:28px; height:28px; border-radius:50%;
+  background: var(--grad-gold);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-display); font-size:11px; font-weight:800;
+}
+.user-name { font-size:12.5px; font-weight:600; font-family:var(--font-display); }
+.user-role { font-family:var(--font-mono); font-size:10px; color:var(--text3); }
 
-  .divider { border:none; border-top:1px solid var(--border); }
+/* ── MAIN ── */
+.main {
+  margin-left:228px; flex:1;
+  height:100vh; overflow-y:auto;
+  display:flex; flex-direction:column;
+  position:relative; z-index:1;
+}
 
-  /* Animated pulse */
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-  .pulse { animation: pulse 2s ease-in-out infinite; }
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
 
-  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-  .fade-in { animation: fadeIn .3s ease; }
+/* ── TOPBAR ── */
+.topbar {
+  padding:15px 26px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:16px;
+  background:rgba(7,8,11,.85);
+  backdrop-filter:blur(8px);
+  position:sticky; top:0; z-index:50;
+}
+.topbar-title {
+  font-family: var(--font-display);
+  font-size:17px; font-weight:800; letter-spacing:-.4px;
+}
+.topbar-sub {
+  font-family: var(--font-mono);
+  font-size:10px; color:var(--text3); margin-top:2px; letter-spacing:.3px;
+}
+.topbar-actions { margin-left:auto; display:flex; gap:8px; }
+
+/* ── BUTTONS ── */
+.btn {
+  padding:8px 16px; border-radius:var(--r-sm);
+  font-family:var(--font-display); font-size:12px; font-weight:600;
+  cursor:pointer; border:none; transition:all .15s;
+  display:inline-flex; align-items:center; gap:6px;
+  position:relative; overflow:hidden;
+}
+.btn::after {
+  content:''; position:absolute; inset:0;
+  background:rgba(255,255,255,0.07);
+  transform:translateX(-101%); transition:transform .25s ease;
+}
+.btn:hover::after { transform:translateX(0); }
+
+.btn-ghost {
+  background:transparent; color:var(--text2);
+  border:1px solid var(--border2);
+}
+.btn-ghost:hover { border-color:var(--border2); color:var(--text); }
+
+.btn-primary {
+  background: var(--grad-gold); color:#000;
+  font-weight:700;
+  box-shadow: 0 0 20px var(--gold-dim);
+}
+.btn-primary:hover { box-shadow:0 0 28px var(--gold-glow); }
+
+.btn-teal {
+  background: var(--grad-teal); color:#000; font-weight:700;
+  box-shadow:0 0 20px var(--teal-dim);
+}
+.btn-teal:hover { box-shadow:0 0 28px var(--teal-glow); }
+
+.btn-jade {
+  background: var(--grad-jade); color:#000; font-weight:700;
+  box-shadow:0 0 20px var(--jade-dim);
+}
+.btn-jade:hover { box-shadow:0 0 28px var(--jade-glow); }
+
+.btn-sm { padding:6px 12px; font-size:11px; }
+
+/* ── PAGE ── */
+.page { padding:26px; display:none; flex-direction:column; gap:20px; }
+.page.active { display:flex; }
+
+/* ── STAGGER ANIMATION ── */
+@keyframes riseUp {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.page.active > * {
+  animation: riseUp .4s ease both;
+}
+.page.active > *:nth-child(1) { animation-delay:.04s; }
+.page.active > *:nth-child(2) { animation-delay:.10s; }
+.page.active > *:nth-child(3) { animation-delay:.16s; }
+.page.active > *:nth-child(4) { animation-delay:.22s; }
+.page.active > *:nth-child(5) { animation-delay:.28s; }
+.page.active > *:nth-child(6) { animation-delay:.34s; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  flex:1;
+  transition: border-color .2s, box-shadow .2s;
+}
+.card:hover { border-color:var(--border2); }
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  transition: border-color .2s;
+}
+.chart-card:hover { border-color:var(--border2); }
+
+.chart-header {
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;
+}
+.chart-title {
+  font-family: var(--font-display);
+  font-size:13px; font-weight:700; letter-spacing:-.2px;
+}
+.chart-wrap { position:relative; height:210px; }
+
+/* ── STAT GRID ── */
+.stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  position:relative; overflow:hidden;
+  transition: border-color .2s, box-shadow .2s;
+}
+.stat-card:hover { border-color:var(--border2); }
+
+.stat-card::before {
+  content:'';
+  position:absolute; top:0; left:0; right:0; height:1px;
+  background: linear-gradient(90deg, transparent, var(--gold-glow), transparent);
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size:10px; color:var(--text3);
+  font-weight:500; letter-spacing:.6px;
+  text-transform:uppercase; margin-bottom:8px;
+}
+.stat-val {
+  font-family: var(--font-mono);
+  font-size:28px; font-weight:700; line-height:1;
+}
+.stat-sub {
+  font-family: var(--font-mono);
+  font-size:10px; color:var(--text3); margin-top:8px;
+}
+.delta-up { color:var(--jade) !important; }
+.delta-down { color:var(--red) !important; }
+
+/* ── TABLE ── */
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.table-head {
+  padding:14px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+table { width:100%; border-collapse:collapse; }
+th {
+  padding:9px 16px;
+  font-family:var(--font-mono); font-size:9px; font-weight:600;
+  color:var(--text3); text-align:left;
+  letter-spacing:.8px; text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+}
+td {
+  padding:11px 16px; font-size:12.5px;
+  border-bottom:1px solid var(--border); color:var(--text);
+}
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--surface2); }
+
+/* ── PILLS ── */
+.pill {
+  display:inline-flex; align-items:center;
+  padding:3px 9px; border-radius:99px;
+  font-family:var(--font-mono); font-size:10px; font-weight:600;
+}
+.pill-gold   { background:var(--gold-dim);  color:var(--gold-bright); }
+.pill-teal   { background:var(--teal-dim);  color:var(--teal); }
+.pill-jade   { background:var(--jade-dim);  color:var(--jade); }
+.pill-amber  { background:rgba(212,146,10,.12); color:var(--gold-bright); }
+.pill-red    { background:rgba(232,64,64,.12);  color:var(--red); }
+.pill-gray   { background:var(--surface3);  color:var(--text3); }
+
+/* keep old class names working */
+.pill-blue   { background:var(--teal-dim);  color:var(--teal); }
+.pill-purple { background:var(--gold-dim);  color:var(--gold-bright); }
+.pill-green  { background:var(--jade-dim);  color:var(--jade); }
+
+/* ── FORM ── */
+.form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group.full { grid-column:1/-1; }
+
+label {
+  font-family: var(--font-mono);
+  font-size:10px; font-weight:600; color:var(--text2);
+  text-transform:uppercase; letter-spacing:.5px;
+}
+input, select, textarea {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text); padding:9px 12px;
+  font-family: var(--font-body); font-size:13px;
+  outline:none; transition:.14s;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-dim);
+}
+select option { background:var(--surface2); }
+textarea { resize:vertical; min-height:76px; }
+
+/* ── STEPS ── */
+.steps { display:flex; gap:0; margin-bottom:20px; }
+.step {
+  flex:1; padding:11px 14px;
+  background:var(--surface); border:1px solid var(--border);
+  display:flex; align-items:center; gap:8px;
+  font-family:var(--font-mono); font-size:10px; font-weight:600;
+  color:var(--text3); position:relative; cursor:pointer;
+  text-transform:uppercase; letter-spacing:.5px;
+}
+.step:not(:last-child)::after {
+  content:'›'; position:absolute; right:-9px; top:50%; transform:translateY(-50%);
+  color:var(--border2); font-size:18px; z-index:1;
+}
+.step:first-child { border-radius:var(--r) 0 0 var(--r); }
+.step:last-child  { border-radius:0 var(--r) var(--r) 0; }
+.step.active { background:var(--gold-dim); border-color:var(--gold); color:var(--gold); }
+.step.done   { background:var(--jade-dim); border-color:var(--jade); color:var(--jade); }
+.step-num {
+  width:18px; height:18px; border-radius:50%;
+  background:var(--surface3);
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; flex-shrink:0; font-family:var(--font-mono);
+}
+.step.active .step-num { background:var(--gold);  color:#000; }
+.step.done   .step-num { background:var(--jade);  color:#000; }
+
+/* ── ROW / COL ── */
+.row { display:flex; gap:14px; }
+.col { display:flex; flex-direction:column; gap:14px; flex:1; }
+
+/* ── SCORE BARS ── */
+.score-row { display:flex; flex-direction:column; gap:4px; }
+.score-label { display:flex; justify-content:space-between; font-size:11.5px; }
+.score-bar { height:4px; background:var(--surface3); border-radius:2px; overflow:hidden; }
+.score-fill { height:100%; border-radius:2px; transition:width 1s ease; }
+
+/* ── TABS ── */
+.tabs {
+  display:flex; gap:2px;
+  background:var(--surface2); padding:3px;
+  border-radius:var(--r-sm); width:fit-content;
+}
+.tab {
+  padding:7px 14px; border-radius:5px;
+  font-family:var(--font-mono); font-size:11px; font-weight:600;
+  cursor:pointer; color:var(--text3); transition:.14s;
+  text-transform:uppercase; letter-spacing:.4px;
+}
+.tab.active {
+  background:var(--surface);
+  color:var(--text);
+  box-shadow:0 1px 4px rgba(0,0,0,.4);
+}
+
+/* ── PIPELINE ── */
+.pipeline { display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; }
+.pipeline-col {
+  min-width:190px;
+  background:var(--surface2);
+  border-radius:var(--r); border:1px solid var(--border);
+  overflow:hidden;
+}
+.pipeline-header {
+  padding:9px 12px;
+  font-family:var(--font-mono); font-size:9px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.8px;
+  border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between;
+}
+.pipeline-card {
+  margin:7px; padding:10px 11px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r-sm); cursor:pointer; transition:.14s;
+}
+.pipeline-card:hover { border-color:var(--gold); box-shadow:0 0 12px var(--gold-dim); }
+.pipeline-card-name { font-family:var(--font-display); font-size:12px; font-weight:700; }
+.pipeline-card-sub  { font-size:10.5px; color:var(--text3); margin-top:2px; }
+.pipeline-card-val  {
+  font-family:var(--font-mono); font-size:12px; font-weight:700;
+  margin-top:6px; color:var(--gold-bright);
+}
+
+/* ── MODULE INTRO ── */
+.module-intro {
+  background: linear-gradient(135deg, var(--surface), var(--surface2));
+  border:1px solid var(--border);
+  border-radius:var(--r); padding:26px;
+  display:flex; align-items:center; gap:22px;
+}
+.module-intro-icon {
+  width:56px; height:56px; border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; flex-shrink:0;
+}
+.module-intro-title {
+  font-family:var(--font-display);
+  font-size:19px; font-weight:800; margin-bottom:6px; letter-spacing:-.3px;
+}
+.module-intro-desc { font-size:12.5px; color:var(--text2); line-height:1.65; max-width:600px; }
+
+/* ── INSIGHT GRID ── */
+.insight-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.insight-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:16px;
+  display:flex; flex-direction:column; gap:9px;
+  transition: border-color .2s, box-shadow .2s;
+}
+.insight-card:hover { box-shadow:0 0 24px rgba(212,146,10,.06); }
+.insight-icon { font-size:20px; }
+.insight-label {
+  font-family:var(--font-mono); font-size:9px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.8px; color:var(--text3);
+}
+.insight-title { font-family:var(--font-display); font-size:13.5px; font-weight:700; line-height:1.3; }
+.insight-body  { font-size:12px; color:var(--text2); line-height:1.65; }
+.insight-action {
+  margin-top:4px; padding:7px 12px; border-radius:var(--r-sm);
+  font-family:var(--font-mono); font-size:10px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.5px;
+  cursor:pointer; border:none; transition:.15s;
+}
+.action-gold { background:var(--gold-dim); color:var(--gold-bright); }
+.action-gold:hover { background:var(--gold-glow); }
+/* legacy */
+.action-blue { background:var(--teal-dim); color:var(--teal); }
+.action-blue:hover { background:var(--teal-glow); }
+
+/* ── MEETING UI ── */
+.meeting-layout { display:grid; grid-template-columns:1fr 300px; gap:14px; }
+.meeting-main { display:flex; flex-direction:column; gap:11px; }
+.meeting-video {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); flex:1; min-height:280px;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:11px;
+}
+.meeting-controls { display:flex; gap:8px; justify-content:center; }
+.ctrl-btn {
+  width:42px; height:42px; border-radius:50%; border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:15px; transition:.14s;
+  background:var(--surface2); color:var(--text);
+  border:1px solid var(--border);
+}
+.ctrl-btn:hover { background:var(--surface3); }
+.ctrl-btn.danger { background:rgba(232,64,64,.12); color:var(--red); border-color:rgba(232,64,64,.3); }
+.ctrl-btn.active { background:var(--teal-dim); color:var(--teal); border-color:var(--teal); }
+
+.ai-panel { display:flex; flex-direction:column; gap:10px; overflow-y:auto; }
+.ai-suggestion {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--r); padding:13px;
+}
+.ai-tag {
+  font-family:var(--font-mono); font-size:9px; font-weight:700;
+  text-transform:uppercase; letter-spacing:.8px; margin-bottom:6px;
+}
+.ai-text { font-size:11.5px; color:var(--text2); line-height:1.65; }
+.ai-copy {
+  font-family:var(--font-mono); font-size:10px; padding:5px 10px;
+  border-radius:5px; cursor:pointer; border:none; margin-top:8px;
+  background:var(--surface3); color:var(--text2); transition:.14s;
+}
+.ai-copy:hover { background:var(--border2); color:var(--text); }
+
+/* ── DIVIDER ── */
+.divider { border:none; border-top:1px solid var(--border); }
+
+/* ── EMPTY STATE ── */
+.empty {
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:11px; padding:56px 20px; color:var(--text3); text-align:center;
+}
+.empty-icon { font-size:36px; opacity:.3; }
+.empty-title { font-family:var(--font-display); font-size:14px; font-weight:700; color:var(--text2); }
+.empty-sub { font-size:12px; max-width:320px; line-height:1.65; }
+
+/* ── TOGGLE ── */
+.toggle-wrap { display:flex; align-items:center; gap:8px; cursor:pointer; }
+.toggle {
+  width:34px; height:18px; background:var(--surface3);
+  border-radius:9px; position:relative; transition:.2s;
+}
+.toggle.on { background:var(--gold); }
+.toggle::after {
+  content:''; position:absolute; top:2px; left:2px;
+  width:14px; height:14px; background:#fff; border-radius:50%; transition:.2s;
+}
+.toggle.on::after { left:18px; }
+
+/* ── PULSE ── */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+.pulse { animation: pulse 2s ease-in-out infinite; }
+
+/* ── GLOW PULSE on active nav ── */
+@keyframes goldGlow {
+  0%,100% { box-shadow:none; }
+  50%      { box-shadow: inset 0 0 20px rgba(212,146,10,.06); }
+}
+.nav-item.active { animation: goldGlow 3s ease infinite; }
+
+/* number counter */
+.count-num { display:inline-block; }
+
 </style>
 </head>
 <body>
@@ -324,7 +609,7 @@
   <div class="sidebar-logo">
     <div class="logo-icon">P</div>
     <div>
-      <div class="logo-text">predictable<span style="color:var(--blue)">.ai</span></div>
+      <div class="logo-text">predictable<span style="color:var(--teal)">.ai</span></div>
       <div class="logo-sub">Revenue OS</div>
     </div>
   </div>
@@ -358,7 +643,7 @@
   <div class="nav-item" data-page="pro-overview" onclick="nav(this,'pro-overview')">
     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2.5-5 5-5M14 11l-3 3-1.5-1.5"/></svg>
     Prospección
-    <span class="nav-badge purple">7</span>
+    <span class="nav-badge teal">7</span>
   </div>
   <div class="nav-item" data-page="pro-icp" onclick="nav(this,'pro-icp')" style="padding-left:24px;font-size:12px">
     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5"><path d="M8 1l2 4 5 .5-3.5 3.5 1 5L8 12l-4.5 2 1-5L1 5.5 6 5z"/></svg>
@@ -377,7 +662,7 @@
   <div class="nav-item" data-page="ventas-overview" onclick="nav(this,'ventas-overview')">
     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5"><path d="M8 2v12M4 10l4 4 4-4"/><circle cx="8" cy="5" r="3"/></svg>
     Ventas AI
-    <span class="nav-badge green">2</span>
+    <span class="nav-badge jade">2</span>
   </div>
   <div class="nav-item" data-page="ventas-coach" onclick="nav(this,'ventas-coach')" style="padding-left:24px;font-size:12px">
     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="1.5"/><path d="M5 13v2M11 13v2M3 15h10"/></svg>
@@ -406,7 +691,7 @@
 
 <!-- ═══════ PAGE: DASHBOARD ═══════ -->
 <div class="page active fade-in" id="page-dashboard">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div>
       <div class="topbar-title">Revenue OS</div>
       <div class="topbar-sub">Bienvenido, Aarón · Semana 15 · Q2 2026</div>
@@ -421,17 +706,17 @@
   <div class="stat-grid">
     <div class="stat-card">
       <div class="stat-label">Reuniones generadas</div>
-      <div class="stat-val" style="color:var(--blue)">42</div>
+      <div class="stat-val" style="color:var(--gold-bright)"><span data-count="42">42</span></div>
       <div class="stat-sub delta-up">↑ 18% vs mes anterior</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Contactos en secuencia</div>
-      <div class="stat-val" style="color:var(--purple)">1,247</div>
+      <div class="stat-val" style="color:var(--teal)"><span data-count="1247">1,247</span></div>
       <div class="stat-sub delta-up">↑ 340 nuevos esta semana</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Open rate emails</div>
-      <div class="stat-val" style="color:var(--amber)">38.4%</div>
+      <div class="stat-val" style="color:var(--amber)"><span data-count="38.4" data-suf="%">38.4%</span></div>
       <div class="stat-sub delta-up">↑ 4.1pp vs benchmark</div>
     </div>
     <div class="stat-card">
@@ -465,14 +750,14 @@
     <div class="card" style="cursor:pointer" onclick="nav(document.querySelector('[data-page=mi-overview]'),'mi-overview')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--blue);margin-bottom:8px">Módulo 1</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--teal);margin-bottom:8px">Módulo 1</div>
           <div style="font-size:16px;font-weight:800">Market Intelligence</div>
           <div style="font-size:12px;color:var(--text2);margin-top:4px">3 insights accionables · Actualizado hace 2h</div>
         </div>
         <span class="pill pill-green">Activo</span>
       </div>
       <div style="margin-top:16px;height:4px;background:var(--surface3);border-radius:2px">
-        <div style="height:4px;width:78%;background:var(--gradient-blue);border-radius:2px"></div>
+        <div style="height:4px;width:78%;background:var(--gradient-gold);border-radius:2px"></div>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:6px">78% matriz completada</div>
     </div>
@@ -480,14 +765,14 @@
     <div class="card" style="cursor:pointer" onclick="nav(document.querySelector('[data-page=pro-overview]'),'pro-overview')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div>
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--purple);margin-bottom:8px">Módulo 2</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--gold);margin-bottom:8px">Módulo 2</div>
           <div style="font-size:16px;font-weight:800">Prospección</div>
           <div style="font-size:12px;color:var(--text2);margin-top:4px">7 secuencias activas · 1,247 contactos</div>
         </div>
         <span class="pill pill-green">Activo</span>
       </div>
       <div style="margin-top:16px;height:4px;background:var(--surface3);border-radius:2px">
-        <div style="height:4px;width:92%;background:var(--gradient-purple);border-radius:2px"></div>
+        <div style="height:4px;width:92%;background:var(--grad-teal);border-radius:2px"></div>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:6px">ICP definido · Apollo conectado</div>
     </div>
@@ -502,7 +787,7 @@
         <span class="pill pill-amber">2 hoy</span>
       </div>
       <div style="margin-top:16px;height:4px;background:var(--surface3);border-radius:2px">
-        <div style="height:4px;width:55%;background:var(--gradient-green);border-radius:2px"></div>
+        <div style="height:4px;width:55%;background:var(--grad-jade);border-radius:2px"></div>
       </div>
       <div style="font-size:11px;color:var(--text3);margin-top:6px">Coach activo · Reporte semanal listo</div>
     </div>
@@ -527,12 +812,12 @@
         <div class="pipeline-card"><div class="pipeline-card-name">Logística MX</div><div class="pipeline-card-sub">CEO · Email D3</div><div class="pipeline-card-val">$5,100/mo</div></div>
       </div>
       <div class="pipeline-col">
-        <div class="pipeline-header" style="color:var(--blue)">Reunión agendada <span>5</span></div>
+        <div class="pipeline-header" style="color:var(--teal)">Reunión agendada <span>5</span></div>
         <div class="pipeline-card"><div class="pipeline-card-name">SaaS Ventures</div><div class="pipeline-card-sub">Mié 16 Abr · 10:00</div><div class="pipeline-card-val">$8,500/mo</div></div>
         <div class="pipeline-card"><div class="pipeline-card-name">Edu Connect</div><div class="pipeline-card-sub">Jue 17 Abr · 15:00</div><div class="pipeline-card-val">$3,200/mo</div></div>
       </div>
       <div class="pipeline-col">
-        <div class="pipeline-header" style="color:var(--purple)">Discovery hecho <span>4</span></div>
+        <div class="pipeline-header" style="color:var(--gold)">Discovery hecho <span>4</span></div>
         <div class="pipeline-card"><div class="pipeline-card-name">PropTech AR</div><div class="pipeline-card-sub">Score: 82 · Caliente</div><div class="pipeline-card-val">$12,000/mo</div></div>
       </div>
       <div class="pipeline-col">
@@ -545,7 +830,7 @@
 
 <!-- ═══════ PAGE: MI OVERVIEW ═══════ -->
 <div class="page fade-in" id="page-mi-overview">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div>
       <div class="topbar-title">Market Intelligence</div>
       <div class="topbar-sub">Módulo 1 · Transformamos datos de mercado en ventaja competitiva</div>
@@ -559,7 +844,7 @@
   <div class="module-intro">
     <div class="module-intro-icon" style="background:var(--blue-dim)">🔭</div>
     <div>
-      <div class="module-intro-title">Market Intelligence <span style="color:var(--blue)">.ai</span></div>
+      <div class="module-intro-title">Market Intelligence <span style="color:var(--teal)">.ai</span></div>
       <div class="module-intro-desc">No es un resumen de newsletters ni un informe genérico de tendencias. Es un <strong>dashboard de inteligencia accionable</strong>: te dice exactamente cómo ajustar tu go-to-market, qué reinvenciones necesita tu producto, cómo se mueve el consumidor y qué ventajas competitivas explotar en tu próxima prospección.</div>
     </div>
   </div>
@@ -567,7 +852,7 @@
   <div class="stat-grid">
     <div class="stat-card">
       <div class="stat-label">Competidores monitoreados</div>
-      <div class="stat-val" style="color:var(--blue)">5</div>
+      <div class="stat-val" style="color:var(--teal)">5</div>
       <div class="stat-sub">Actualizado hace 2h</div>
     </div>
     <div class="stat-card">
@@ -582,7 +867,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-label">Matriz completada</div>
-      <div class="stat-val" style="color:var(--purple)">78%</div>
+      <div class="stat-val" style="color:var(--gold)">78%</div>
       <div class="stat-sub">Faltan 4 secciones</div>
     </div>
   </div>
@@ -622,7 +907,7 @@
 
 <!-- ═══════ PAGE: MI MATRIX ═══════ -->
 <div class="page fade-in" id="page-mi-matrix">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div>
       <div class="topbar-title">Matriz de Input</div>
       <div class="topbar-sub">Módulo 1 · Define el contexto para que la IA genere inteligencia relevante</div>
@@ -727,7 +1012,7 @@
 
 <!-- ═══════ PAGE: MI DASHBOARD ═══════ -->
 <div class="page fade-in" id="page-mi-dashboard">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div>
       <div class="topbar-title">Intelligence Hub</div>
       <div class="topbar-sub">Módulo 1 · Análisis actualizado: 14 Abr 2026 · 09:42</div>
@@ -758,21 +1043,21 @@
     </div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:4px">
       <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:8px">Qué más valoran</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--teal);margin-bottom:8px">Qué más valoran</div>
         <div class="score-row" style="gap:8px">
-          <div><div class="score-label"><span style="font-size:12px">Time-to-value rápido</span><span style="font-size:12px;font-weight:700">92%</span></div><div class="score-bar"><div class="score-fill" style="width:92%;background:var(--gradient-blue)"></div></div></div>
-          <div><div class="score-label"><span style="font-size:12px">Integración con CRM</span><span style="font-size:12px;font-weight:700">87%</span></div><div class="score-bar"><div class="score-fill" style="width:87%;background:var(--gradient-blue)"></div></div></div>
-          <div><div class="score-label"><span style="font-size:12px">ROI demostrable</span><span style="font-size:12px;font-weight:700">84%</span></div><div class="score-bar"><div class="score-fill" style="width:84%;background:var(--gradient-blue)"></div></div></div>
-          <div><div class="score-label"><span style="font-size:12px">Onboarding &lt;1 semana</span><span style="font-size:12px;font-weight:700">79%</span></div><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--gradient-blue)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">Time-to-value rápido</span><span style="font-size:12px;font-weight:700">92%</span></div><div class="score-bar"><div class="score-fill" style="width:92%;background:var(--gradient-gold)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">Integración con CRM</span><span style="font-size:12px;font-weight:700">87%</span></div><div class="score-bar"><div class="score-fill" style="width:87%;background:var(--gradient-gold)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">ROI demostrable</span><span style="font-size:12px;font-weight:700">84%</span></div><div class="score-bar"><div class="score-fill" style="width:84%;background:var(--gradient-gold)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">Onboarding &lt;1 semana</span><span style="font-size:12px;font-weight:700">79%</span></div><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--gradient-gold)"></div></div></div>
         </div>
       </div>
       <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--amber);margin-bottom:8px">Por qué no compran</div>
         <div class="score-row" style="gap:8px">
-          <div><div class="score-label"><span style="font-size:12px">"Ya tenemos una herramienta"</span><span style="font-size:12px;font-weight:700">68%</span></div><div class="score-bar"><div class="score-fill" style="width:68%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></div>
-          <div><div class="score-label"><span style="font-size:12px">Precio no justificado</span><span style="font-size:12px;font-weight:700">54%</span></div><div class="score-bar"><div class="score-fill" style="width:54%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></div>
-          <div><div class="score-label"><span style="font-size:12px">Necesita aprobación board</span><span style="font-size:12px;font-weight:700">41%</span></div><div class="score-bar"><div class="score-fill" style="width:41%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></div>
-          <div><div class="score-label"><span style="font-size:12px">No prioridad ahora</span><span style="font-size:12px;font-weight:700">37%</span></div><div class="score-bar"><div class="score-fill" style="width:37%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">"Ya tenemos una herramienta"</span><span style="font-size:12px;font-weight:700">68%</span></div><div class="score-bar"><div class="score-fill" style="width:68%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">Precio no justificado</span><span style="font-size:12px;font-weight:700">54%</span></div><div class="score-bar"><div class="score-fill" style="width:54%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">Necesita aprobación board</span><span style="font-size:12px;font-weight:700">41%</span></div><div class="score-bar"><div class="score-fill" style="width:41%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></div>
+          <div><div class="score-label"><span style="font-size:12px">No prioridad ahora</span><span style="font-size:12px;font-weight:700">37%</span></div><div class="score-bar"><div class="score-fill" style="width:37%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></div>
         </div>
       </div>
       <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px">
@@ -791,7 +1076,7 @@
 
 <!-- ═══════ PAGE: MI ACCIONABLES ═══════ -->
 <div class="page fade-in" id="page-mi-accionables">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div>
       <div class="topbar-title">Accionables GTM</div>
       <div class="topbar-sub">Módulo 1 · Qué hacer esta semana para mover el mercado</div>
@@ -853,21 +1138,21 @@
 
 <!-- ═══════ PAGE: PRO OVERVIEW ═══════ -->
 <div class="page fade-in" id="page-pro-overview">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div>
       <div class="topbar-title">Prospección</div>
       <div class="topbar-sub">Módulo 2 · Del ICP al meeting en calendar — sin fricciones</div>
     </div>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm" onclick="nav(document.querySelector('[data-page=pro-icp]'),'pro-icp')">Editar ICP</button>
-      <button class="btn btn-purple btn-sm" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo')">+ Nueva secuencia Apollo</button>
+      <button class="btn btn-teal btn-sm" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo')">+ Nueva secuencia Apollo</button>
     </div>
   </div>
 
   <div class="module-intro">
     <div class="module-intro-icon" style="background:var(--purple-dim)">🎯</div>
     <div>
-      <div class="module-intro-title">Prospección <span style="color:var(--purple)">.ai</span></div>
+      <div class="module-intro-title">Prospección <span style="color:var(--gold)">.ai</span></div>
       <div class="module-intro-desc">Define tu ICP con los frameworks de targeting más probados (Josh, Chris Orlob, Alex Boyd), construye tu base de datos con Apollo, dispara cadencias multi-canal (email · LinkedIn · WhatsApp · SMS) desde respond.io y agenda reuniones directo en Google Calendar. Todo en un solo flujo.</div>
     </div>
   </div>
@@ -875,12 +1160,12 @@
   <div class="stat-grid">
     <div class="stat-card">
       <div class="stat-label">Contactos activos</div>
-      <div class="stat-val" style="color:var(--purple)">1,247</div>
+      <div class="stat-val" style="color:var(--teal)"><span data-count="1247">1,247</span></div>
       <div class="stat-sub delta-up">↑ 340 esta semana</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Secuencias activas</div>
-      <div class="stat-val" style="color:var(--blue)">7</div>
+      <div class="stat-val" style="color:var(--teal)">7</div>
       <div class="stat-sub">3 canales: Email, LI, WA</div>
     </div>
     <div class="stat-card">
@@ -900,17 +1185,17 @@
     <div class="chart-header"><span class="chart-title">Flujo de prospección activo</span></div>
     <div style="display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0">
       <div style="text-align:center;min-width:120px">
-        <div style="width:48px;height:48px;border-radius:12px;background:var(--blue-dim);border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px">🗺️</div>
-        <div style="font-size:11px;font-weight:700;color:var(--blue)">ICP Builder</div>
+        <div style="width:48px;height:48px;border-radius:12px;background:var(--blue-dim);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px">🗺️</div>
+        <div style="font-size:11px;font-weight:700;color:var(--teal)">ICP Builder</div>
         <div style="font-size:10px;color:var(--text3)">Definido</div>
       </div>
-      <div style="flex:1;height:2px;background:linear-gradient(90deg,var(--blue),var(--purple));min-width:40px"></div>
+      <div style="flex:1;height:2px;background:linear-gradient(90deg,var(--teal),var(--gold));min-width:40px"></div>
       <div style="text-align:center;min-width:120px">
-        <div style="width:48px;height:48px;border-radius:12px;background:var(--purple-dim);border:2px solid var(--purple);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px">🔍</div>
-        <div style="font-size:11px;font-weight:700;color:var(--purple)">Apollo Search</div>
+        <div style="width:48px;height:48px;border-radius:12px;background:var(--purple-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px">🔍</div>
+        <div style="font-size:11px;font-weight:700;color:var(--gold)">Apollo Search</div>
         <div style="font-size:10px;color:var(--text3)">1,247 contactos</div>
       </div>
-      <div style="flex:1;height:2px;background:linear-gradient(90deg,var(--purple),var(--amber));min-width:40px"></div>
+      <div style="flex:1;height:2px;background:linear-gradient(90deg,var(--gold),var(--amber));min-width:40px"></div>
       <div style="text-align:center;min-width:120px">
         <div style="width:48px;height:48px;border-radius:12px;background:rgba(245,158,11,.12);border:2px solid var(--amber);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px">💬</div>
         <div style="font-size:11px;font-weight:700;color:var(--amber)">respond.io</div>
@@ -922,10 +1207,10 @@
         <div style="font-size:11px;font-weight:700;color:var(--green)">Google Calendar</div>
         <div style="font-size:10px;color:var(--text3)">11 reuniones</div>
       </div>
-      <div style="flex:1;height:2px;background:linear-gradient(90deg,var(--green),var(--blue));min-width:40px"></div>
+      <div style="flex:1;height:2px;background:linear-gradient(90deg,var(--green),var(--teal));min-width:40px"></div>
       <div style="text-align:center;min-width:120px">
-        <div style="width:48px;height:48px;border-radius:12px;background:var(--blue-dim);border:2px solid var(--blue);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px">🤖</div>
-        <div style="font-size:11px;font-weight:700;color:var(--blue)">Ventas AI</div>
+        <div style="width:48px;height:48px;border-radius:12px;background:var(--blue-dim);border:2px solid var(--teal);display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 8px">🤖</div>
+        <div style="font-size:11px;font-weight:700;color:var(--teal)">Ventas AI</div>
         <div style="font-size:10px;color:var(--text3)">Módulo 3</div>
       </div>
     </div>
@@ -933,7 +1218,7 @@
 
   <!-- Active sequences table -->
   <div class="table-card">
-    <div class="table-head"><span style="font-size:14px;font-weight:700">Secuencias activas</span><button class="btn btn-purple btn-sm" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo')">+ Nueva</button></div>
+    <div class="table-head"><span style="font-size:14px;font-weight:700">Secuencias activas</span><button class="btn btn-teal btn-sm" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo')">+ Nueva</button></div>
     <table>
       <thead><tr><th>Secuencia</th><th>Canal</th><th>Enviados</th><th>Opens</th><th>Replies</th><th>Meetings</th><th>Estado</th></tr></thead>
       <tbody>
@@ -949,40 +1234,40 @@
 
 <!-- ═══════ PAGE: PRO ICP ═══════ -->
 <div class="page fade-in" id="page-pro-icp">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div><div class="topbar-title">ICP Builder</div><div class="topbar-sub">Módulo 2 · Basado en Josh's Targeting Framework + Chris Orlob Playbook</div></div>
     <div class="topbar-actions">
-      <button class="btn btn-ghost btn-sm" onclick="icpBuilder.saveICP(this)">Guardar ICP</button>
-      <button class="btn btn-purple btn-sm" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo')">Buscar en Apollo →</button>
+      <button class="btn btn-ghost btn-sm">Guardar ICP</button>
+      <button class="btn btn-teal btn-sm" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo')">Buscar en Apollo →</button>
     </div>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <!-- Firmographic -->
     <div class="chart-card">
-      <div style="font-size:14px;font-weight:800;margin-bottom:16px;color:var(--purple)">🏢 Firmográfico</div>
+      <div style="font-size:14px;font-weight:800;margin-bottom:16px;color:var(--gold)">🏢 Firmográfico</div>
       <div class="form-grid" style="grid-template-columns:1fr">
         <div class="form-group"><label>Países objetivo</label>
-          <select multiple  data-icp="countries" style="height:80px"><option selected>México</option><option selected>Colombia</option><option selected>Perú</option><option>Chile</option><option>Argentina</option></select></div>
+          <select multiple style="height:80px"><option selected>México</option><option selected>Colombia</option><option selected>Perú</option><option>Chile</option><option>Argentina</option></select></div>
         <div class="form-group"><label>Industrias</label>
-          <select multiple data-icp="industries" style="height:80px"><option selected>SaaS / Tecnología</option><option selected>Servicios Profesionales</option><option>E-commerce</option><option selected>Real Estate</option></select></div>
+          <select multiple style="height:80px"><option selected>SaaS / Tecnología</option><option selected>Servicios Profesionales</option><option>E-commerce</option><option selected>Real Estate</option></select></div>
         <div class="form-group"><label>Tamaño de empresa</label>
-          <select multiple data-icp="company_sizes" style="height:60px"><option>1-10</option><option selected>11-50</option><option selected>51-200</option><option>201-500</option></select></div>
+          <select multiple style="height:60px"><option>1-10</option><option selected>11-50</option><option selected>51-200</option><option>201-500</option></select></div>
         <div class="form-group"><label>Tipo de cliente</label>
-          <select data-icp="client_type"><option selected>B2B</option><option>B2C</option><option>Mixto</option></select></div>
+          <select><option selected>B2B</option><option>B2C</option><option>Mixto</option></select></div>
       </div>
     </div>
 
     <!-- Psychographic -->
     <div class="chart-card">
-      <div style="font-size:14px;font-weight:800;margin-bottom:16px;color:var(--blue)">🧠 Psicográfico (Dolor)</div>
+      <div style="font-size:14px;font-weight:800;margin-bottom:16px;color:var(--teal)">🧠 Psicográfico (Dolor)</div>
       <div class="form-grid" style="grid-template-columns:1fr">
         <div class="form-group"><label>Cargo del decisor</label>
-          <select multiple data-icp="titles" style="height:80px"><option selected>CEO / Founder</option><option selected>Director de Ventas</option><option selected>Head of Revenue</option><option>CFO</option><option>VP Sales</option></select></div>
+          <select multiple style="height:80px"><option selected>CEO / Founder</option><option selected>Director de Ventas</option><option selected>Head of Revenue</option><option>CFO</option><option>VP Sales</option></select></div>
         <div class="form-group"><label>Área de decisión</label>
-          <select multiple data-icp="areas" style="height:60px"><option selected>Ventas</option><option selected>Operaciones Comerciales</option><option>Marketing</option><option>Finanzas</option></select></div>
+          <select multiple style="height:60px"><option selected>Ventas</option><option selected>Operaciones Comerciales</option><option>Marketing</option><option>Finanzas</option></select></div>
         <div class="form-group"><label>Trigger events (señales de compra)</label>
-          <select multiple data-icp="triggers" style="height:80px"><option selected>Contrató nuevos SDRs</option><option selected>Nuevo director de ventas</option><option>Levantó capital</option><option selected>Perdió deals grandes</option><option>Expansión a nuevo país</option></select></div>
+          <select multiple style="height:80px"><option selected>Contrató nuevos SDRs</option><option selected>Nuevo director de ventas</option><option>Levantó capital</option><option selected>Perdió deals grandes</option><option>Expansión a nuevo país</option></select></div>
       </div>
     </div>
 
@@ -991,11 +1276,11 @@
       <div style="font-size:14px;font-weight:800;margin-bottom:16px;color:var(--red)">🚫 ICP Negativo (Excluir)</div>
       <div class="form-grid" style="grid-template-columns:1fr">
         <div class="form-group"><label>Industrias a excluir</label>
-          <input type="text" value="Gobierno, ONGs, Educación pública, B2C puro" data-icp="negative_industries"></div>
+          <input type="text" value="Gobierno, ONGs, Educación pública, B2C puro"></div>
         <div class="form-group"><label>Tamaños a excluir</label>
-          <select multiple data-icp="negative_sizes" style="height:60px"><option selected>1-10 (sin presupuesto)</option><option>500+ (ciclo demasiado largo)</option></select></div>
+          <select multiple style="height:60px"><option selected>1-10 (sin presupuesto)</option><option>500+ (ciclo demasiado largo)</option></select></div>
         <div class="form-group"><label>Exclusión explícita (clientes pasados, competidores)</label>
-          <textarea data-icp="excluded_companies" style="height:60px" placeholder="Nombres de empresas a excluir..."></textarea></div>
+          <textarea style="height:60px" placeholder="Nombres de empresas a excluir..."></textarea></div>
       </div>
     </div>
 
@@ -1003,10 +1288,10 @@
     <div class="chart-card">
       <div style="font-size:14px;font-weight:800;margin-bottom:16px;color:var(--green)">📊 Score de ICP actual</div>
       <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="score-row"><div class="score-label"><span>Especificidad firmográfica</span><span style="font-weight:700;color:var(--green)">88%</span></div><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--gradient-green)"></div></div></div>
-        <div class="score-row"><div class="score-label"><span>Claridad del dolor</span><span style="font-weight:700;color:var(--green)">91%</span></div><div class="score-bar"><div class="score-fill" style="width:91%;background:var(--gradient-green)"></div></div></div>
-        <div class="score-row"><div class="score-label"><span>Trigger events definidos</span><span style="font-weight:700;color:var(--amber)">67%</span></div><div class="score-bar"><div class="score-fill" style="width:67%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></div>
-        <div class="score-row"><div class="score-label"><span>Mensaje alineado al ICP</span><span style="font-weight:700;color:var(--blue)">79%</span></div><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--gradient-blue)"></div></div></div>
+        <div class="score-row"><div class="score-label"><span>Especificidad firmográfica</span><span style="font-weight:700;color:var(--green)">88%</span></div><div class="score-bar"><div class="score-fill" style="width:88%;background:var(--grad-jade)"></div></div></div>
+        <div class="score-row"><div class="score-label"><span>Claridad del dolor</span><span style="font-weight:700;color:var(--green)">91%</span></div><div class="score-bar"><div class="score-fill" style="width:91%;background:var(--grad-jade)"></div></div></div>
+        <div class="score-row"><div class="score-label"><span>Trigger events definidos</span><span style="font-weight:700;color:var(--amber)">67%</span></div><div class="score-bar"><div class="score-fill" style="width:67%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></div>
+        <div class="score-row"><div class="score-label"><span>Mensaje alineado al ICP</span><span style="font-weight:700;color:var(--teal)">79%</span></div><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--gradient-gold)"></div></div></div>
         <div style="margin-top:8px;padding:12px;background:var(--surface2);border-radius:8px;font-size:12px;color:var(--text2)">
           💡 <strong style="color:var(--text)">Recomendación:</strong> Agrega más trigger events específicos (ej: job postings de SDRs, cambio en liderazgo comercial) para mejorar precisión de targeting en +15%
         </div>
@@ -1017,10 +1302,10 @@
 
 <!-- ═══════ PAGE: PRO APOLLO ═══════ -->
 <div class="page fade-in" id="page-pro-apollo">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div><div class="topbar-title">Apollo Sequences</div><div class="topbar-sub">Módulo 2 · ICP → Apollo → Contactos enriquecidos → Secuencia activa</div></div>
     <div class="topbar-actions">
-      <button class="btn btn-purple btn-sm" onclick="launchApollo()">🚀 Buscar leads ahora</button>
+      <button class="btn btn-teal btn-sm" onclick="launchApollo()">🚀 Buscar leads ahora</button>
     </div>
   </div>
 
@@ -1036,27 +1321,27 @@
     <div style="font-size:15px;font-weight:800;margin-bottom:18px">Criterios de búsqueda (desde ICP)</div>
     <div class="form-grid">
       <div class="form-group"><label>Títulos a buscar</label>
-        <input type="text" value="CEO, Founder, Director de Ventas, VP Sales, Head of Revenue" data-apollo="titles"></div>
+        <input type="text" value="CEO, Founder, Director de Ventas, VP Sales, Head of Revenue"></div>
       <div class="form-group"><label>Industrias</label>
-        <input type="text" value="SaaS, Tech, Professional Services, Real Estate" data-apollo="industries"></div>
+        <input type="text" value="SaaS, Tech, Professional Services, Real Estate"></div>
       <div class="form-group"><label>Países</label>
-        <input type="text" value="Mexico, Colombia, Peru, Chile" data-apollo="countries"></div>
+        <input type="text" value="Mexico, Colombia, Peru, Chile"></div>
       <div class="form-group"><label>Tamaño empresa (empleados)</label>
-        <input type="text" value="11-200" data-apollo="company_sizes"></div>
+        <input type="text" value="11-200"></div>
       <div class="form-group"><label>Keywords en bio/descripción</label>
-        <input type="text" value="revenue, sales, growth, B2B" data-apollo="keywords"></div>
+        <input type="text" value="revenue, sales, growth, B2B"></div>
       <div class="form-group"><label>Secuencia destino</label>
-        <select data-apollo="sequence_dest"><option selected>SaaS CEOs LATAM Q2</option><option>Head of Sales - MX</option><option>+ Crear nueva secuencia</option></select></div>
+        <select><option selected>SaaS CEOs LATAM Q2</option><option>Head of Sales - MX</option><option>+ Crear nueva secuencia</option></select></div>
     </div>
     <div style="margin-top:20px;display:flex;gap:12px">
-      <button class="btn btn-purple" onclick="launchApollo()">🔍 Buscar en Apollo · ~500 contactos estimados</button>
+      <button class="btn btn-teal" onclick="launchApollo()">🔍 Buscar en Apollo · ~500 contactos estimados</button>
       <button class="btn btn-ghost">Ver últimos resultados</button>
     </div>
   </div>
 
   <div id="apollo-results" style="display:none">
     <div class="table-card">
-      <div class="table-head"><span style="font-size:14px;font-weight:700">Resultados · 487 contactos</span><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">↓ CSV</button><button class="btn btn-purple btn-sm">→ Agregar a secuencia</button></div></div>
+      <div class="table-head"><span style="font-size:14px;font-weight:700">Resultados · 487 contactos</span><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">↓ CSV</button><button class="btn btn-teal btn-sm">→ Agregar a secuencia</button></div></div>
       <table>
         <thead><tr><th>Nombre</th><th>Cargo</th><th>Empresa</th><th>País</th><th>Email</th><th>Score ICP</th></tr></thead>
         <tbody>
@@ -1073,11 +1358,11 @@
 
 <!-- ═══════ PAGE: PRO MENSAJES ═══════ -->
 <div class="page fade-in" id="page-pro-mensajes">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div><div class="topbar-title">Mensajes & Cadencias</div><div class="topbar-sub">Módulo 2 · Secuencias multi-canal entrenadas para no sonar a ventas</div></div>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm">+ Nueva cadencia</button>
-      <button class="btn btn-purple btn-sm">Activar en respond.io</button>
+      <button class="btn btn-teal btn-sm">Activar en respond.io</button>
     </div>
   </div>
 
@@ -1093,8 +1378,8 @@
     <div style="display:grid;grid-template-columns:240px 1fr;gap:16px">
       <div style="display:flex;flex-direction:column;gap:8px">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);margin-bottom:4px">Secuencia (7 pasos)</div>
-        <div id="seq-d1" class="chart-card" style="cursor:pointer;border-color:var(--blue);background:var(--blue-dim)" onclick="showEmail('d1')">
-          <div style="font-size:11px;font-weight:700;color:var(--blue)">DÍA 1</div>
+        <div id="seq-d1" class="chart-card" style="cursor:pointer;border-color:var(--teal);background:var(--blue-dim)" onclick="showEmail('d1')">
+          <div style="font-size:11px;font-weight:700;color:var(--teal)">DÍA 1</div>
           <div style="font-size:12px;font-weight:600;margin-top:2px">Primer contacto</div>
         </div>
         <div class="chart-card" style="cursor:pointer" onclick="showEmail('d3')">
@@ -1117,7 +1402,7 @@
       <div id="email-content" class="chart-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <div><div style="font-size:15px;font-weight:800">Día 1 — Primer contacto</div><div style="font-size:12px;color:var(--text3);margin-top:2px">Open rate promedio: 41% · Reply rate: 9.1%</div></div>
-          <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">✏ Editar</button><button class="btn btn-purple btn-sm">↗ Usar</button></div>
+          <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">✏ Editar</button><button class="btn btn-teal btn-sm">↗ Usar</button></div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.8;color:var(--text)">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text3);margin-bottom:8px">ASUNTO</div>
@@ -1143,14 +1428,14 @@
   <div id="tab-linkedin" class="msg-tab" style="display:none">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div class="chart-card">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--blue)">Connection Request</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--teal)">Connection Request</div>
         <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.8">
           Hola %%first_name%%, vi que trabajas en %%company%% — ¿conectamos?
         </div>
         <div style="margin-top:10px;font-size:11px;color:var(--text3)">Sin pitch. Sin contexto extra. Solo conexión.</div>
       </div>
       <div class="chart-card">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--blue)">Mensaje D+2 (tras aceptar)</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--teal)">Mensaje D+2 (tras aceptar)</div>
         <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.8">
           Gracias por conectar, %%first_name%%.<br><br>
           Vi que lideran el equipo comercial en %%company%%. ¿Están usando algo para hacer seguimiento de si el equipo va a cumplir el mes o es más reactivo?
@@ -1158,14 +1443,14 @@
         <div style="margin-top:10px;font-size:11px;color:var(--text3)">Pregunta de dolor. No menciona la empresa ni el producto.</div>
       </div>
       <div class="chart-card">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--blue)">Mensaje D+5 (si no responde)</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--teal)">Mensaje D+5 (si no responde)</div>
         <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.8">
           %%first_name%%, sin compromiso — ¿tiene 20 min la próxima semana para contarme qué están haciendo con el pipeline? Me sirve entender cómo lo hacen en %%industry%%.
         </div>
         <div style="margin-top:10px;font-size:11px;color:var(--text3)">Frame de "me ayudas tú a mí". Reduce fricción.</div>
       </div>
       <div class="chart-card">
-        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--blue)">Breakup D+10</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--teal)">Breakup D+10</div>
         <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:16px;font-size:13px;line-height:1.8">
           No problem si no es el momento, %%first_name%%. Si algún día el forecast se vuelve un dolor de cabeza, aquí estoy.
         </div>
@@ -1215,11 +1500,11 @@
 
 <!-- ═══════ PAGE: VENTAS OVERVIEW ═══════ -->
 <div class="page fade-in" id="page-ventas-overview">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div><div class="topbar-title">Ventas AI</div><div class="topbar-sub">Módulo 3 · Meeting coach en vivo + visibilidad total sobre tu equipo SDR</div></div>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm" onclick="nav(document.querySelector('[data-page=ventas-reportes]'),'ventas-reportes')">📊 Ver reportes</button>
-      <button class="btn btn-green btn-sm" onclick="nav(document.querySelector('[data-page=ventas-coach]'),'ventas-coach')">🔴 Entrar a reunión</button>
+      <button class="btn btn-jade btn-sm" onclick="nav(document.querySelector('[data-page=ventas-coach]'),'ventas-coach')">🔴 Entrar a reunión</button>
     </div>
   </div>
 
@@ -1239,7 +1524,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-label">Score promedio del equipo</div>
-      <div class="stat-val" style="color:var(--blue)">74/100</div>
+      <div class="stat-val" style="color:var(--teal)">74/100</div>
       <div class="stat-sub delta-up">↑ 6pts vs mes anterior</div>
     </div>
     <div class="stat-card">
@@ -1249,7 +1534,7 @@
     </div>
     <div class="stat-card">
       <div class="stat-label">Tasa de avance a propuesta</div>
-      <div class="stat-val" style="color:var(--purple)">38%</div>
+      <div class="stat-val" style="color:var(--gold)">38%</div>
       <div class="stat-sub delta-up">↑ 8pp con coaching activo</div>
     </div>
   </div>
@@ -1268,7 +1553,7 @@
           <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Contexto desde Módulo 2</div>
           <div style="display:flex;gap:6px"><span class="pill pill-blue">Email D3 abierto</span><span class="pill pill-purple">Score ICP: 94</span></div>
         </div>
-        <button class="btn btn-green btn-sm" onclick="nav(document.querySelector('[data-page=ventas-coach]'),'ventas-coach')">Entrar con AI Coach →</button>
+        <button class="btn btn-jade btn-sm" onclick="nav(document.querySelector('[data-page=ventas-coach]'),'ventas-coach')">Entrar con AI Coach →</button>
       </div>
       <div style="display:flex;align-items:center;gap:16px;padding:14px;background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border)">
         <div style="width:44px;height:44px;border-radius:10px;background:rgba(245,158,11,.12);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📅</div>
@@ -1302,7 +1587,7 @@
 
 <!-- ═══════ PAGE: VENTAS COACH ═══════ -->
 <div class="page fade-in" id="page-ventas-coach">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div style="display:flex;align-items:center;gap:12px">
       <div style="width:10px;height:10px;border-radius:50%;background:#ef4444" class="pulse"></div>
       <div>
@@ -1337,12 +1622,12 @@
       <div class="chart-card" style="max-height:200px;overflow-y:auto">
         <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Transcripción en vivo</div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;line-height:1.7">
-          <div><span style="color:var(--blue);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Mira, el tema es que ya tenemos HubSpot y la verdad funciona bastante bien para nosotros...</span></div>
+          <div><span style="color:var(--teal);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Mira, el tema es que ya tenemos HubSpot y la verdad funciona bastante bien para nosotros...</span></div>
           <div><span style="color:var(--green);font-weight:700">Vendedor:</span> <span style="color:var(--text2)">Entiendo, ¿y cómo está siendo el proceso de forecast con HubSpot actualmente?</span></div>
-          <div><span style="color:var(--blue);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Bueno, ahí sí es un poco más manual... el equipo llena los campos pero depende mucho de cada persona...</span></div>
+          <div><span style="color:var(--teal);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Bueno, ahí sí es un poco más manual... el equipo llena los campos pero depende mucho de cada persona...</span></div>
           <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--amber)">⚠</span><span style="color:var(--amber);font-size:11px;font-weight:600">SEÑAL DE DOLOR DETECTADA — Ver panel derecho</span></div>
           <div><span style="color:var(--green);font-weight:700">Vendedor:</span> <span style="color:var(--text2)">¿Y eso ha causado alguna sorpresa al cierre de mes o de quarter?</span></div>
-          <div><span style="color:var(--blue);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Jaja sí, la verdad el Q4 del año pasado fue medio desastre porque creímos que íbamos bien y...</span></div>
+          <div><span style="color:var(--teal);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Jaja sí, la verdad el Q4 del año pasado fue medio desastre porque creímos que íbamos bien y...</span></div>
         </div>
       </div>
 
@@ -1359,13 +1644,13 @@
     <div class="ai-panel">
       <!-- Prospect context -->
       <div class="ai-suggestion" style="border-color:rgba(79,142,247,.3)">
-        <div class="ai-tag" style="color:var(--blue)">📋 Contexto del prospecto</div>
+        <div class="ai-tag" style="color:var(--teal)">📋 Contexto del prospecto</div>
         <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
           <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Score ICP</span><strong style="color:var(--green)">94</strong></div>
           <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Último toque</span><strong>Email D3 abierto 3x</strong></div>
           <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Industria</span><strong>SaaS B2B</strong></div>
           <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Pain identificado</span><strong style="color:var(--amber)">Forecast caótico</strong></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Intelligence M1</span><strong style="color:var(--blue)">3 insights disponibles</strong></div>
+          <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Intelligence M1</span><strong style="color:var(--teal)">3 insights disponibles</strong></div>
         </div>
       </div>
 
@@ -1394,8 +1679,8 @@
 
       <!-- Stage guidance -->
       <div class="ai-suggestion">
-        <div class="ai-tag" style="color:var(--purple)">🗺 ETAPA ACTUAL</div>
-        <div style="font-size:13px;font-weight:700;color:var(--purple);margin-bottom:6px">Discovery — Profundización del dolor</div>
+        <div class="ai-tag" style="color:var(--gold)">🗺 ETAPA ACTUAL</div>
+        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">Discovery — Profundización del dolor</div>
         <div class="ai-text">Estás en el momento ideal para el framework SPIN: Situación confirmada ✓, Problema emergiendo. Falta: Implicación y Need-Payoff.</div>
         <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
           <div style="font-size:11px;font-weight:700;color:var(--text3)">PRÓXIMOS PASOS SUGERIDOS</div>
@@ -1409,10 +1694,10 @@
       <div class="ai-suggestion">
         <div class="ai-tag" style="color:var(--text3)">📊 SCORE EN VIVO</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Escucha activa</span><span style="font-size:11px;font-weight:700;color:var(--green)">82%</span></div><div class="score-bar"><div class="score-fill" style="width:82%;background:var(--gradient-green)"></div></div></div>
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Profundización del dolor</span><span style="font-size:11px;font-weight:700;color:var(--blue)">71%</span></div><div class="score-bar"><div class="score-fill" style="width:71%;background:var(--gradient-blue)"></div></div></div>
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Control del ritmo</span><span style="font-size:11px;font-weight:700;color:var(--amber)">58%</span></div><div class="score-bar"><div class="score-fill" style="width:58%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></div>
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Manejo de objeciones</span><span style="font-size:11px;font-weight:700;color:var(--green)">79%</span></div><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--gradient-green)"></div></div></div>
+          <div class="score-row"><div class="score-label"><span style="font-size:11px">Escucha activa</span><span style="font-size:11px;font-weight:700;color:var(--green)">82%</span></div><div class="score-bar"><div class="score-fill" style="width:82%;background:var(--grad-jade)"></div></div></div>
+          <div class="score-row"><div class="score-label"><span style="font-size:11px">Profundización del dolor</span><span style="font-size:11px;font-weight:700;color:var(--teal)">71%</span></div><div class="score-bar"><div class="score-fill" style="width:71%;background:var(--gradient-gold)"></div></div></div>
+          <div class="score-row"><div class="score-label"><span style="font-size:11px">Control del ritmo</span><span style="font-size:11px;font-weight:700;color:var(--amber)">58%</span></div><div class="score-bar"><div class="score-fill" style="width:58%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></div>
+          <div class="score-row"><div class="score-label"><span style="font-size:11px">Manejo de objeciones</span><span style="font-size:11px;font-weight:700;color:var(--green)">79%</span></div><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--grad-jade)"></div></div></div>
         </div>
       </div>
     </div>
@@ -1421,11 +1706,11 @@
 
 <!-- ═══════ PAGE: VENTAS REPORTES ═══════ -->
 <div class="page fade-in" id="page-ventas-reportes">
-  <div class="topbar" style="position:relative;top:0;margin:-28px -28px 0;width:calc(100% + 56px)">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div><div class="topbar-title">Reportes SDR</div><div class="topbar-sub">Módulo 3 · Visibilidad total sobre el performance del equipo de ventas</div></div>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm">↓ Exportar PDF</button>
-      <button class="btn btn-green btn-sm">Enviar al director</button>
+      <button class="btn btn-jade btn-sm">Enviar al director</button>
     </div>
   </div>
 
@@ -1458,36 +1743,36 @@
           <tr>
             <td><strong>Camila Soto</strong></td><td>16</td>
             <td><span class="pill pill-green">88</span></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:91%;background:var(--gradient-green)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:85%;background:var(--gradient-green)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:88%;background:var(--gradient-green)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:91%;background:var(--grad-jade)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:85%;background:var(--grad-jade)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:88%;background:var(--grad-jade)"></div></div></td>
             <td>7/16 <span style="color:var(--green)">(44%)</span></td>
             <td><span class="pill pill-green">Top performer</span></td>
           </tr>
           <tr>
             <td><strong>Miguel Torres</strong></td><td>14</td>
             <td><span class="pill pill-blue">82</span></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:84%;background:var(--gradient-blue)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:78%;background:var(--gradient-blue)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:80%;background:var(--gradient-blue)"></div></div></td>
-            <td>5/14 <span style="color:var(--blue)">(36%)</span></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:84%;background:var(--gradient-gold)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:78%;background:var(--gradient-gold)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:80%;background:var(--gradient-gold)"></div></div></td>
+            <td>5/14 <span style="color:var(--teal)">(36%)</span></td>
             <td><span class="pill pill-amber">Trabajar cierre</span></td>
           </tr>
           <tr>
             <td><strong>Valeria Cruz</strong></td><td>11</td>
             <td><span class="pill pill-blue">74</span></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:76%;background:var(--gradient-blue)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:61%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:74%;background:var(--gradient-blue)"></div></div></td>
-            <td>4/11 <span style="color:var(--blue)">(36%)</span></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:76%;background:var(--gradient-gold)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:61%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:74%;background:var(--gradient-gold)"></div></div></td>
+            <td>4/11 <span style="color:var(--teal)">(36%)</span></td>
             <td><span class="pill pill-amber">Reforzar objeciones</span></td>
           </tr>
           <tr>
             <td><strong>Diego Reyes</strong></td><td>8</td>
             <td><span class="pill pill-amber">61</span></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:55%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:63%;background:linear-gradient(90deg,#F59E0B,#D97706)"></div></div></td>
-            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:48%;background:linear-gradient(90deg,#EF4444,#DC2626)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:55%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:63%;background:linear-gradient(90deg,#D4920A,#9A6300)"></div></div></td>
+            <td><div class="score-bar" style="width:100px"><div class="score-fill" style="width:48%;background:linear-gradient(90deg,#E84040,#B01C1C)"></div></div></td>
             <td>2/8 <span style="color:var(--red)">(25%)</span></td>
             <td><span class="pill pill-red">⚠ Necesita coaching</span></td>
           </tr>
@@ -1522,7 +1807,7 @@
           <div style="font-size:12px;color:var(--text2);line-height:1.6">Valeria y Miguel no están usando el reencuadre correcto. El 71% de estas objeciones termina en deal perdido cuando el SDR simplemente acepta la respuesta en vez de profundizar.</div>
         </div>
         <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:14px">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--blue);margin-bottom:8px">Oportunidad de mejora</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--teal);margin-bottom:8px">Oportunidad de mejora</div>
           <div style="font-size:13px;font-weight:700;margin-bottom:6px">Follow-up post-meeting es débil</div>
           <div style="font-size:12px;color:var(--text2);line-height:1.6">Solo el 38% de deals con propuesta enviada tiene un follow-up registrado en los siguientes 3 días. La mayor parte de las pérdidas ocurren en silencio, no por un "no".</div>
         </div>
@@ -1590,7 +1875,7 @@
               <div style="font-size:11px;color:var(--text3)">Escucha activa</div>
             </div>
             <div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:var(--blue)">71%</div>
+              <div style="font-size:20px;font-weight:800;color:var(--teal)">71%</div>
               <div style="font-size:11px;color:var(--text3)">Profundización</div>
             </div>
             <div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px">
@@ -1619,8 +1904,8 @@
               <div style="font-size:12px"><strong style="color:var(--amber)">OBJECIÓN</strong> — "Ya tenemos HubSpot" → vendedor reencuadró correctamente</div>
             </div>
             <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--blue-dim);border-radius:8px">
-              <span style="color:var(--blue);font-weight:700;min-width:50px">00:26</span>
-              <div style="font-size:12px"><strong style="color:var(--blue)">INTERÉS</strong> — Preguntó por integración con HubSpot y tiempo de implementación</div>
+              <span style="color:var(--teal);font-weight:700;min-width:50px">00:26</span>
+              <div style="font-size:12px"><strong style="color:var(--teal)">INTERÉS</strong> — Preguntó por integración con HubSpot y tiempo de implementación</div>
             </div>
             <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--green-dim);border-radius:8px">
               <span style="color:var(--green);font-weight:700;min-width:50px">00:34</span>
@@ -1648,10 +1933,10 @@
           </div>
         </div>
         <div class="chart-card">
-          <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--blue)">📊 Probabilidad de cierre</div>
-          <div style="font-size:32px;font-weight:900;color:var(--blue);text-align:center;margin:8px 0">72%</div>
+          <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--teal)">📊 Probabilidad de cierre</div>
+          <div style="font-size:32px;font-weight:900;color:var(--teal);text-align:center;margin:8px 0">72%</div>
           <div style="font-size:11px;color:var(--text3);text-align:center">Basado en señales de la reunión + historial del ICP</div>
-          <div style="margin-top:10px;height:6px;background:var(--surface3);border-radius:3px"><div style="width:72%;height:100%;background:var(--gradient-blue);border-radius:3px"></div></div>
+          <div style="margin-top:10px;height:6px;background:var(--surface3);border-radius:3px"><div style="width:72%;height:100%;background:var(--gradient-gold);border-radius:3px"></div></div>
         </div>
       </div>
     </div>
@@ -1685,7 +1970,7 @@ function initReportCharts() {
     type: 'bar',
     data: {
       labels: ['Camila Soto','Miguel Torres','Valeria Cruz','Diego Reyes'],
-      datasets: [{ label: 'Score', data: [88,82,74,61], backgroundColor: ['#10B981','#4F8EF7','#4F8EF7','#F59E0B'], borderRadius: 6 }]
+      datasets: [{ label: 'Score', data: [88,82,74,61], backgroundColor: ['#10B981','#D4920A','#D4920A','#F59E0B'], borderRadius: 6 }]
     },
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}}, y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}} } }
   });
@@ -1694,10 +1979,10 @@ function initReportCharts() {
     data: {
       labels: ['S12','S13','S14','S15'],
       datasets: [
-        { label: 'Camila', data: [4,4,4,4], backgroundColor: '#10B981', borderRadius: 3 },
-        { label: 'Miguel', data: [3,4,3,4], backgroundColor: '#4F8EF7', borderRadius: 3 },
-        { label: 'Valeria', data: [2,3,3,3], backgroundColor: '#7C5CFC', borderRadius: 3 },
-        { label: 'Diego', data: [2,2,2,2], backgroundColor: '#F59E0B', borderRadius: 3 },
+        { label: 'Camila', data: [4,4,4,4], backgroundColor: '#00C878', borderRadius: 3 },
+        { label: 'Miguel', data: [3,4,3,4], backgroundColor: '#D4920A', borderRadius: 3 },
+        { label: 'Valeria', data: [2,3,3,3], backgroundColor: '#00C4D4', borderRadius: 3 },
+        { label: 'Diego', data: [2,2,2,2], backgroundColor: '#F0C060', borderRadius: 3 },
       ]
     },
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{labels:{color:'#8A9BBF',font:{size:10}}}}, scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}}, y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}} } }
@@ -1711,7 +1996,7 @@ function initDealsCharts() {
     type: 'doughnut',
     data: {
       labels: ['Ya tienen herramienta','Sin urgencia creada','Precio','No champion interno','Sin follow-up'],
-      datasets: [{ data: [34,22,18,14,12], backgroundColor: ['#EF4444','#F59E0B','#7C5CFC','#4F8EF7','#6B7280'], borderWidth:0 }]
+      datasets: [{ data: [34,22,18,14,12], backgroundColor: ['#EF4444','#F59E0B','#00C4D4','#D4920A','#6B7280'], borderWidth:0 }]
     },
     options: { responsive:true, maintainAspectRatio:false, cutout:'60%', plugins:{legend:{position:'bottom',labels:{color:'#8A9BBF',font:{size:10},padding:8}}} }
   });
@@ -1719,7 +2004,7 @@ function initDealsCharts() {
     type: 'bar',
     data: {
       labels: ['Discovery','Demo','Propuesta','Negociación'],
-      datasets: [{ label: 'Deals perdidos', data: [8,5,7,3], backgroundColor: '#EF4444', borderRadius: 4 }]
+      datasets: [{ label: 'Deals perdidos', data: [8,5,7,3], backgroundColor: '#E84040', borderRadius: 4 }]
     },
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}}, y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}} } }
   });
@@ -1748,11 +2033,11 @@ function nav(el, pageId) {
 
 // ── CHARTS ──
 const chartDefaults = {
-  color: '#8A9BBF',
-  plugins: { legend: { labels: { color: '#8A9BBF', font: { size: 11 } } } },
+  color: '#5A6279',
+  plugins: { legend: { labels: { color: '#5A6279', font: { size: 11 } } } },
   scales: {
-    x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#8A9BBF', font: { size: 11 } } },
-    y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#8A9BBF', font: { size: 11 } } }
+    x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5A6279', font: { size: 11 } } },
+    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5A6279', font: { size: 11 } } }
   }
 };
 
@@ -1763,12 +2048,12 @@ window.addEventListener('DOMContentLoaded', () => {
     data: {
       labels: ['Sem 12','Sem 13','Sem 14','Sem 15'],
       datasets: [
-        { label: 'Emails enviados', data: [280, 310, 295, 340], backgroundColor: 'rgba(79,142,247,0.5)', borderRadius: 4 },
-        { label: 'Replies', data: [22, 28, 25, 31], backgroundColor: 'rgba(124,92,252,0.6)', borderRadius: 4 },
+        { label: 'Emails enviados', data: [280, 310, 295, 340], backgroundColor: 'rgba(212,146,10,0.5)', borderRadius: 4 },
+        { label: 'Replies', data: [22, 28, 25, 31], backgroundColor: 'rgba(0,196,212,0.6)', borderRadius: 4 },
         { label: 'Meetings', data: [8, 10, 9, 11], backgroundColor: 'rgba(16,185,129,0.7)', borderRadius: 4 }
       ]
     },
-    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8A9BBF', font: { size: 11 } } } } }
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#5A6279', font: { size: 11 } } } } }
   });
 
   // Channel donut
@@ -1776,9 +2061,9 @@ window.addEventListener('DOMContentLoaded', () => {
     type: 'doughnut',
     data: {
       labels: ['Email', 'LinkedIn', 'WhatsApp', 'SMS'],
-      datasets: [{ data: [52, 28, 14, 6], backgroundColor: ['#4F8EF7','#7C5CFC','#10B981','#F59E0B'], borderWidth: 0 }]
+      datasets: [{ data: [52, 28, 14, 6], backgroundColor: ['#D4920A','#00C4D4','#10B981','#F59E0B'], borderWidth: 0 }]
     },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#8A9BBF', font: { size: 11 }, padding: 12 } } }, cutout: '65%' }
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#5A6279', font: { size: 11 }, padding: 12 } } }, cutout: '65%' }
   });
 
   // Positioning scatter
@@ -1786,19 +2071,19 @@ window.addEventListener('DOMContentLoaded', () => {
     type: 'scatter',
     data: {
       datasets: [
-        { label: 'Predictable.ai', data: [{x:7,y:8}], backgroundColor: '#4F8EF7', pointRadius: 12 },
-        { label: 'Clari', data: [{x:8,y:6}], backgroundColor: '#7C5CFC', pointRadius: 10 },
-        { label: 'GoHighLevel', data: [{x:3,y:7}], backgroundColor: '#F59E0B', pointRadius: 10 },
-        { label: 'respond.io', data: [{x:4,y:4}], backgroundColor: '#10B981', pointRadius: 10 },
-        { label: 'Salesforce', data: [{x:9,y:9}], backgroundColor: '#EF4444', pointRadius: 10 },
+        { label: 'Predictable.ai', data: [{x:7,y:8}], backgroundColor: '#D4920A', pointRadius: 12 },
+        { label: 'Clari', data: [{x:8,y:6}], backgroundColor: '#00C4D4', pointRadius: 10 },
+        { label: 'GoHighLevel', data: [{x:3,y:7}], backgroundColor: '#F0C060', pointRadius: 10 },
+        { label: 'respond.io', data: [{x:4,y:4}], backgroundColor: '#00C878', pointRadius: 10 },
+        { label: 'Salesforce', data: [{x:9,y:9}], backgroundColor: '#E84040', pointRadius: 10 },
       ]
     },
     options: {
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#8A9BBF', font: { size: 11 } } } },
+      plugins: { legend: { labels: { color: '#5A6279', font: { size: 11 } } } },
       scales: {
-        x: { min:0, max:10, title: { display:true, text:'Precio', color:'#4E5F7A' }, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#8A9BBF' } },
-        y: { min:0, max:10, title: { display:true, text:'Amplitud de funciones', color:'#4E5F7A' }, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#8A9BBF' } }
+        x: { min:0, max:10, title: { display:true, text:'Precio', color:'#4E5F7A' }, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5A6279' } },
+        y: { min:0, max:10, title: { display:true, text:'Amplitud de funciones', color:'#4E5F7A' }, grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#5A6279' } }
       }
     }
   });
@@ -1809,12 +2094,12 @@ window.addEventListener('DOMContentLoaded', () => {
     data: {
       labels: ['May','Jun','Jul','Ago','Sep','Oct','Nov','Dic','Ene','Feb','Mar','Abr'],
       datasets: [
-        { label: 'revenue operations', data: [42,45,44,48,52,55,58,54,62,68,71,78], borderColor:'#4F8EF7', backgroundColor:'rgba(79,142,247,0.08)', tension:.4, fill:true, pointRadius:3 },
-        { label: 'sales forecast ai', data: [28,30,33,35,38,42,45,48,52,58,63,70], borderColor:'#7C5CFC', backgroundColor:'rgba(124,92,252,0.08)', tension:.4, fill:true, pointRadius:3 },
-        { label: 'crm alternativa', data: [35,33,36,34,37,35,38,40,42,41,44,47], borderColor:'#10B981', tension:.4, pointRadius:3 }
+        { label: 'revenue operations', data: [42,45,44,48,52,55,58,54,62,68,71,78], borderColor:'#D4920A', backgroundColor:'rgba(212,146,10,0.08)', tension:.4, fill:true, pointRadius:3 },
+        { label: 'sales forecast ai', data: [28,30,33,35,38,42,45,48,52,58,63,70], borderColor:'#00C4D4', backgroundColor:'rgba(0,196,212,0.08)', tension:.4, fill:true, pointRadius:3 },
+        { label: 'crm alternativa', data: [35,33,36,34,37,35,38,40,42,41,44,47], borderColor:'#00C878', tension:.4, pointRadius:3 }
       ]
     },
-    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#8A9BBF', font: { size: 10 } } } } }
+    options: { ...chartDefaults, responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#5A6279', font: { size: 10 } } } } }
   });
 });
 
@@ -1826,38 +2111,69 @@ function switchMsgTab(el, tabId) {
   document.getElementById(tabId).style.display = 'block';
 }
 
-// ── APOLLO (real, vía Apps Script + Apollo API) ──
-
+// ── APOLLO ──
 function launchApollo() {
-
   const btn = document.querySelector('[onclick="launchApollo()"]');
-
-  apolloSequences.runSearch(btn);
-
+  if(btn) { btn.textContent = '⏳ Buscando...'; btn.disabled = true; }
+  setTimeout(() => {
+    if(btn) { btn.textContent = '✓ 487 contactos encontrados'; btn.style.background = 'var(--grad-jade)'; }
+    const results = document.getElementById('apollo-results');
+    if(results) { results.style.display='block'; results.classList.add('fade-in'); }
+    // Advance step
+    const steps = document.querySelectorAll('#page-pro-apollo .step');
+    if(steps[1]) { steps[1].classList.remove('active'); steps[1].classList.add('done'); steps[1].querySelector('.step-num').textContent='✓'; }
+    if(steps[2]) { steps[2].classList.add('active'); }
+  }, 1800);
 }
-
 
 // ── ANALYSIS ──
 function runAnalysis() {
   const btn = document.querySelector('[onclick="runAnalysis()"]');
   if(btn) { btn.textContent = '⏳ Analizando...'; btn.disabled = true; }
   setTimeout(() => {
-    if(btn) { btn.textContent = '✓ Análisis listo'; btn.style.background = 'var(--gradient-green)'; }
+    if(btn) { btn.textContent = '✓ Análisis listo'; btn.style.background = 'var(--grad-jade)'; }
     nav(document.querySelector('[data-page=mi-dashboard]'), 'mi-dashboard');
   }, 2000);
 }
 </script>
-<!-- Predictable.ai — Integración Apps Script + Apollo -->
 
-<script src="js/config.js"></script>
+<script>
+// ── COUNT-UP ANIMATION ──
+function countUp(el, target, duration = 1200, prefix = '', suffix = '') {
+  const isFloat = String(target).includes('.');
+  const decimals = isFloat ? String(target).split('.')[1].length : 0;
+  const start = performance.now();
+  function step(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = eased * target;
+    el.textContent = prefix + (isFloat ? current.toFixed(decimals) : Math.floor(current).toLocaleString()) + suffix;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
-<script src="js/ui-helpers.js"></script>
+function initCounters() {
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const val    = parseFloat(el.dataset.count);
+    const pre    = el.dataset.pre  || '';
+    const suf    = el.dataset.suf  || '';
+    countUp(el, val, 1400, pre, suf);
+  });
+}
 
-<script src="js/api.js"></script>
+// Run on dashboard load and whenever nav hits dashboard
+const _origNav = window.nav;
+window.nav = function(el, pageId) {
+  _origNav && _origNav(el, pageId);
+  if (pageId === 'dashboard') setTimeout(initCounters, 150);
+};
 
-<script src="js/icp-builder.js"></script>
-
-<script src="js/apollo-sequences.js"></script>
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initCounters, 300);
+});
+</script>
 
 </body>
 </html>
