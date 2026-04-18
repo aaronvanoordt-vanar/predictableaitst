@@ -2686,8 +2686,7 @@ const apolloState = { results:[], selected: new Set(), saved:[], savedListName:'
 
 // ── APOLLO API ──
 const APOLLO_KEY  = 'sQAAncojXI8VIRWgWr9ZYA';
-const _isLocal = ['localhost','127.0.0.1'].includes(window.location.hostname);
-const APOLLO_BASE = _isLocal ? '/proxy/apollo' : 'https://api.apollo.io/api/v1';
+const APOLLO_BASE = 'https://predictableai.aaronvanoordt.workers.dev/proxy/apollo';
 function getApolloKey(){ try{ return localStorage.getItem('apollo_api_key')||APOLLO_KEY; }catch(e){ return APOLLO_KEY; } }
 
 async function apolloFetch(endpoint, body) {
