@@ -2963,19 +2963,65 @@ async function saveToApollo() {
   advanceStep(5);
 }
 
-function runEnrichment() {
+async function runEnrichment() {
   const btn = document.getElementById('btn-enrich');
   if(btn) { btn.textContent='⏳ Enriqueciendo...'; btn.classList.add('saving'); btn.disabled=true; }
-  setTimeout(() => {
-    apolloState.saved.forEach(l => { if(!l.phone) l.phone = `+52 55 ${Math.floor(1000+Math.random()*9000)}-${Math.floor(1000+Math.random()*9000)}`; });
+
+  const contacts = apolloState.saved;
+  const BATCH = 10;
+  let enriched = 0, failed = 0;
+
+  try {
+    for(let i = 0; i < contacts.length; i += BATCH) {
+      const batch = contacts.slice(i, i + BATCH);
+      const details = batch.map(l => {
+        const parts = l.name.trim().split(' ');
+        const d = { first_name: parts[0] || '', last_name: parts.slice(1).join(' ') || '' };
+        if(l.linkedinUrl) d.linkedin_url = l.linkedinUrl;
+        if(l.company && l.company !== '—') d.organization_name = l.company;
+        return d;
+      });
+
+      let data;
+      try {
+        data = await apolloFetch('/people/bulk_match', {
+          reveal_phone_number: true,
+          reveal_personal_emails: true,
+          details
+        });
+      } catch(e) {
+        failed += batch.length;
+        continue;
+      }
+
+      const matches = data.matches || [];
+      matches.forEach((m, idx) => {
+        if(!m) return;
+        const c = batch[idx];
+        if(m.sanitized_phone) { c.phone = m.sanitized_phone; enriched++; }
+        else if(m.phone_numbers?.length) { c.phone = m.phone_numbers[0].sanitized_number || m.phone_numbers[0].raw_number; enriched++; }
+        if(m.email && !c.email?.includes('📧')) c.email = m.email;
+      });
+
+      if(btn) btn.textContent = `⏳ Enriqueciendo... ${Math.min(i+BATCH, contacts.length)}/${contacts.length}`;
+    }
+
     renderResultsTable();
+
     const cl = document.getElementById('enrich-contact-list');
-    if(cl) cl.innerHTML = apolloState.saved.map(l=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:18px">👤</span><div><strong style="font-size:13px">${l.name}</strong><br><span style="font-size:11px;color:var(--text3)">${l.title} · ${l.company}</span></div><div style="margin-left:auto;text-align:right"><div style="font-size:11px;font-family:var(--font-mono);color:var(--text2)">📧 ${l.email}</div><div style="font-size:11px;font-family:var(--font-mono);color:var(--jade)">📞 ${l.phone}</div></div></div>`).join('');
-    if(btn) { btn.textContent='✓ Enriquecimiento Completo'; btn.classList.remove('saving'); btn.style.background='var(--grad-jade)'; btn.disabled=false; }
+    if(cl) cl.innerHTML = contacts.map(l=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:18px">👤</span><div><strong style="font-size:13px">${l.name}</strong><br><span style="font-size:11px;color:var(--text3)">${l.title} · ${l.company}</span></div><div style="margin-left:auto;text-align:right"><div style="font-size:11px;font-family:var(--font-mono);color:var(--text2)">📧 ${l.email||'—'}</div><div style="font-size:11px;font-family:var(--font-mono);color:var(--jade)">📞 ${l.phone||'—'}</div></div></div>`).join('');
+
+    const summary = enriched > 0 ? `✓ Enriquecimiento Completo (${enriched} teléfonos obtenidos)` : '✓ Completo — sin teléfonos disponibles';
+    if(btn) { btn.textContent=summary; btn.classList.remove('saving'); btn.style.background='var(--grad-jade)'; btn.disabled=false; }
     const csvRow = document.getElementById('csv-export-row');
     if(csvRow) csvRow.style.display='flex';
     advanceStep(5);
-  }, 2200);
+
+  } catch(err) {
+    console.error('[Enrich] Error:', err);
+    if(btn) { btn.textContent='⚡ Reintentar enrichment'; btn.classList.remove('saving'); btn.disabled=false; }
+    showApiError(`Error en enrichment: ${err.message}`);
+  }
 }
 
 function downloadCSV(mode) {
