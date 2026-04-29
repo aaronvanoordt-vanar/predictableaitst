@@ -2947,9 +2947,16 @@ async function saveToApollo() {
   apolloState.savedListName = listName;
   apolloState.saved = apolloState.results.filter(l => apolloState.selected.has(l.id));
 
-  // Push real contacts to Apollo with label = listName
+  // Push real contacts to Apollo — first fetch real email via people/match, then save
   try {
     await Promise.all(apolloState.saved.map(async l => {
+      // Get real email from Apollo people DB before saving contact
+      if(l.apolloId && (!l.email || l.email.includes('📧'))) {
+        try {
+          const match = await apolloFetch('/people/match', { id: l.apolloId });
+          if(match.person?.email) l.email = match.person.email;
+        } catch(e) {}
+      }
       const parts = l.name.trim().split(' ');
       const body = {
         first_name: parts[0] || '',
