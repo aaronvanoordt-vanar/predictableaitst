@@ -705,6 +705,11 @@ textarea { resize:vertical; min-height:76px; }
     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M5 8l2 2 4-4"/></svg>
     Apollo Sequences
   </div>
+  <div class="nav-item" data-page="pro-listas" onclick="nav(this,'pro-listas');renderSavedLists()" style="padding-left:24px;font-size:12px">
+    <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 6h6M5 9h4"/></svg>
+    Listas guardadas
+    <span id="nav-listas-badge" class="nav-badge teal" style="display:none">0</span>
+  </div>
   <div class="nav-item" data-page="pro-mensajes" onclick="nav(this,'pro-mensajes')" style="padding-left:24px;font-size:12px">
     <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5"><path d="M2 4a1 1 0 011-1h10a1 1 0 011 1v7a1 1 0 01-1 1H5l-3 2V4z"/></svg>
     Mensajes & Cadencias
@@ -1927,6 +1932,22 @@ textarea { resize:vertical; min-height:76px; }
 </div>
 
 <!-- ═══════ PAGE: PRO MENSAJES ═══════ -->
+<div class="page fade-in" id="page-pro-listas">
+  <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
+    <div><div class="topbar-title">Listas guardadas</div><div class="topbar-sub">Módulo 2 · Contactos guardados en Apollo — enriquece y exporta sin repetir la búsqueda</div></div>
+    <div class="topbar-actions">
+      <button class="btn btn-teal btn-sm" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo');syncApolloSearch()">+ Nueva búsqueda</button>
+    </div>
+  </div>
+  <div id="listas-empty" style="display:none;text-align:center;padding:60px 20px;color:var(--text3)">
+    <div style="font-size:40px;margin-bottom:12px">📋</div>
+    <div style="font-size:15px;font-weight:600;margin-bottom:8px">No hay listas guardadas</div>
+    <div style="font-size:13px;margin-bottom:20px">Haz una búsqueda en Apollo y guarda contactos para verlos aquí.</div>
+    <button class="btn btn-teal" onclick="nav(document.querySelector('[data-page=pro-apollo]'),'pro-apollo');syncApolloSearch()">Ir a Apollo Sequences →</button>
+  </div>
+  <div id="listas-container" style="display:flex;flex-direction:column;gap:16px"></div>
+</div>
+
 <div class="page fade-in" id="page-pro-mensajes">
   <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div><div class="topbar-title">Mensajes & Cadencias</div><div class="topbar-sub">Módulo 2 · Secuencias multi-canal entrenadas para no sonar a ventas</div></div>
@@ -2945,6 +2966,16 @@ async function saveToApollo() {
     console.warn('Apollo save warning:', err.message);
   }
 
+  // Persist list to localStorage
+  try {
+    const stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]');
+    const existing = stored.findIndex(l => l.name === listName);
+    const entry = { name: listName, savedAt: new Date().toISOString(), contacts: apolloState.saved };
+    if(existing >= 0) stored[existing] = entry; else stored.unshift(entry);
+    localStorage.setItem('apollo_lists', JSON.stringify(stored));
+    updateListsBadge();
+  } catch(e) { console.warn('localStorage save failed:', e); }
+
   // Update UI
   if(btn) { btn.textContent='✓ Guardado en Apollo'; btn.classList.remove('saving'); btn.style.background='var(--grad-jade)'; }
   const se = document.getElementById('section-enrich');
@@ -3023,6 +3054,177 @@ async function runEnrichment() {
     showApiError(`Error en enrichment: ${err.message}`);
   }
 }
+
+// ── SAVED LISTS ──
+function updateListsBadge() {
+  try {
+    const stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]');
+    const badge = document.getElementById('nav-listas-badge');
+    if(badge) { badge.textContent = stored.length; badge.style.display = stored.length ? 'inline-flex' : 'none'; }
+  } catch(e) {}
+}
+
+function renderSavedLists() {
+  let stored = [];
+  try { stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]'); } catch(e) {}
+  const container = document.getElementById('listas-container');
+  const empty = document.getElementById('listas-empty');
+  if(!stored.length) {
+    if(empty) empty.style.display = 'block';
+    if(container) container.innerHTML = '';
+    return;
+  }
+  if(empty) empty.style.display = 'none';
+  if(!container) return;
+  container.innerHTML = stored.map((list, li) => {
+    const date = new Date(list.savedAt).toLocaleDateString('es-MX', {day:'numeric',month:'short',year:'numeric'});
+    const withPhone = list.contacts.filter(c => c.phone && !c.phone.includes('disponible')).length;
+    const withEmail = list.contacts.filter(c => c.email && !c.email.includes('📧')).length;
+    const enriched = withPhone > 0;
+    return `
+    <div class="card" id="lista-card-${li}" style="padding:0;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;cursor:pointer;border-bottom:1px solid var(--border)" onclick="toggleListaCard(${li})">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:36px;height:36px;border-radius:8px;background:var(--teal-dim);display:flex;align-items:center;justify-content:center;font-size:16px">📋</div>
+          <div>
+            <div style="font-weight:700;font-size:14px">${list.name}</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:2px">${list.contacts.length} contactos · Guardado ${date}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${enriched ? `<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--jade-dim);color:var(--jade);font-family:var(--font-mono)">✓ enriquecida</span>` : `<span style="font-size:11px;padding:3px 8px;border-radius:4px;background:var(--gold-dim);color:var(--gold);font-family:var(--font-mono)">sin enriquecer</span>`}
+          <svg fill="none" stroke="currentColor" viewBox="0 0 16 16" stroke-width="1.5" style="width:14px;height:14px;opacity:.5;transition:transform .2s" id="lista-chevron-${li}"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+      </div>
+      <div id="lista-body-${li}" style="display:none">
+        <div style="display:flex;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center">
+          <div style="font-size:12px;color:var(--text3);margin-right:4px">
+            📧 ${withEmail}/${list.contacts.length} emails &nbsp;·&nbsp; 📞 ${withPhone}/${list.contacts.length} teléfonos
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="exportListaCSV(${li},'email')">CSV Email</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportListaCSV(${li},'phone')">CSV Llamadas</button>
+            <button class="btn btn-ghost btn-sm" onclick="exportListaCSV(${li},'full')">CSV Completo</button>
+            <button class="btn btn-teal btn-sm" id="enrich-btn-${li}" onclick="enrichLista(${li})">⚡ Enriquecer teléfonos</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--red);opacity:.6" onclick="deleteLista(${li})">Eliminar</button>
+          </div>
+        </div>
+        <div style="max-height:320px;overflow-y:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:var(--surface2)">
+              <th style="padding:8px 16px;text-align:left;color:var(--text3);font-weight:600">Nombre</th>
+              <th style="padding:8px;text-align:left;color:var(--text3);font-weight:600">Cargo</th>
+              <th style="padding:8px;text-align:left;color:var(--text3);font-weight:600">Empresa</th>
+              <th style="padding:8px;text-align:left;color:var(--text3);font-weight:600">Email</th>
+              <th style="padding:8px 16px;text-align:left;color:var(--text3);font-weight:600">Teléfono</th>
+            </tr></thead>
+            <tbody id="lista-tbody-${li}">
+              ${list.contacts.map(c => `<tr style="border-top:1px solid var(--border)">
+                <td style="padding:8px 16px;font-weight:600">${c.name}</td>
+                <td style="padding:8px;color:var(--text2)">${c.title||'—'}</td>
+                <td style="padding:8px;color:var(--text2)">${c.company||'—'}</td>
+                <td style="padding:8px;font-family:var(--font-mono);font-size:11px;color:${c.email&&!c.email.includes('📧')?'var(--teal)':'var(--text3)'}">${c.email||'—'}</td>
+                <td style="padding:8px 16px;font-family:var(--font-mono);font-size:11px;color:${c.phone&&!c.phone.includes('disponible')?'var(--jade)':'var(--text3)'}">${c.phone||'—'}</td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateListsBadge();
+}
+
+function toggleListaCard(li) {
+  const body = document.getElementById(`lista-body-${li}`);
+  const chevron = document.getElementById(`lista-chevron-${li}`);
+  if(!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if(chevron) chevron.style.transform = open ? '' : 'rotate(180deg)';
+}
+
+function deleteLista(li) {
+  if(!confirm('¿Eliminar esta lista? Los contactos en Apollo no se borran.')) return;
+  try {
+    const stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]');
+    stored.splice(li, 1);
+    localStorage.setItem('apollo_lists', JSON.stringify(stored));
+  } catch(e) {}
+  renderSavedLists();
+}
+
+async function enrichLista(li) {
+  let stored = [];
+  try { stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]'); } catch(e) { return; }
+  const list = stored[li];
+  if(!list) return;
+  const btn = document.getElementById(`enrich-btn-${li}`);
+  if(btn) { btn.textContent = '⏳ Enriqueciendo...'; btn.disabled = true; }
+
+  const contacts = list.contacts;
+  const BATCH = 10;
+  let enriched = 0;
+
+  for(let i = 0; i < contacts.length; i += BATCH) {
+    const batch = contacts.slice(i, i + BATCH);
+    const details = batch.map(c => {
+      const parts = (c.name||'').trim().split(' ');
+      const d = { first_name: parts[0]||'', last_name: parts.slice(1).join(' ')||'' };
+      if(c.linkedinUrl) d.linkedin_url = c.linkedinUrl;
+      if(c.company && c.company !== '—') d.organization_name = c.company;
+      return d;
+    });
+    try {
+      const data = await apolloFetch('/people/bulk_match', { reveal_phone_number: true, reveal_personal_emails: true, details });
+      (data.matches || []).forEach((m, idx) => {
+        if(!m) return;
+        const c = batch[idx];
+        if(m.sanitized_phone) { c.phone = m.sanitized_phone; enriched++; }
+        else if(m.phone_numbers?.length) { c.phone = m.phone_numbers[0].sanitized_number || m.phone_numbers[0].raw_number; enriched++; }
+        if(m.email && !(c.email||'').includes('📧')) c.email = m.email;
+      });
+    } catch(e) { console.warn('[enrichLista] batch error:', e); }
+    if(btn) btn.textContent = `⏳ ${Math.min(i+BATCH,contacts.length)}/${contacts.length}...`;
+  }
+
+  // Save back to localStorage
+  try {
+    stored[li].contacts = contacts;
+    localStorage.setItem('apollo_lists', JSON.stringify(stored));
+  } catch(e) {}
+
+  renderSavedLists();
+  // Re-open the card
+  toggleListaCard(li);
+  if(btn) btn.textContent = enriched > 0 ? `✓ ${enriched} teléfonos obtenidos` : '— Sin teléfonos disponibles';
+}
+
+function exportListaCSV(li, mode) {
+  let stored = [];
+  try { stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]'); } catch(e) {}
+  const list = stored[li];
+  if(!list) return;
+  const leads = list.contacts;
+  let headers, rows;
+  if(mode === 'email') {
+    headers = ['First Name','Last Name','Email','Title','Company','Country'];
+    rows = leads.map(l => { const [f,...r]=l.name.split(' '); return [f,r.join(' '),l.email,l.title,l.company,l.country]; });
+  } else if(mode === 'phone') {
+    headers = ['First Name','Last Name','Phone','Title','Company','Country'];
+    rows = leads.filter(l=>l.phone&&!l.phone.includes('disponible')).map(l => { const [f,...r]=l.name.split(' '); return [f,r.join(' '),l.phone,l.title,l.company,l.country]; });
+  } else {
+    headers = ['First Name','Last Name','Email','Phone','Title','Company','Country','Employees','Industry'];
+    rows = leads.map(l => { const [f,...r]=l.name.split(' '); return [f,r.join(' '),l.email,l.phone||'',l.title,l.company,l.country,l.employees,l.industry]; });
+  }
+  const esc = v => `"${String(v||'').replace(/"/g,'""')}"`;
+  const csv = [headers.map(esc).join(','), ...rows.map(r=>r.map(esc).join(','))].join('\n');
+  const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})), download: `${list.name.replace(/\s+/g,'_')}_${mode}_${new Date().toISOString().slice(0,10)}.csv` });
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// Init badge on load
+try { updateListsBadge(); } catch(e) {}
 
 function downloadCSV(mode) {
   const leads = apolloState.saved.length > 0 ? apolloState.saved : apolloState.results;
