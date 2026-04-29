@@ -2693,7 +2693,7 @@ async function apolloFetch(endpoint, body) {
   const key = getApolloKey();
   const res = await fetch(APOLLO_BASE + endpoint, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache', 'X-Api-Key': key },
+    headers: { 'Content-Type': 'application/json', 'X-Api-Key': key },
     body: JSON.stringify(body)
   });
   if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.message || `HTTP ${res.status}`); }
