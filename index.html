@@ -2847,7 +2847,7 @@ async function runApolloSearch() {
   } catch(err) {
     console.error('[Apollo] Error:', err);
     if(err instanceof TypeError) {
-      showApiError('⚠ Error de conexión. Asegúrate de que el servidor proxy esté corriendo: python3 server.py');
+      showApiError('⚠ Error de conexión. Verifica tu conexión a internet e intenta de nuevo.');
     } else {
       showApiError(`Error Apollo API: ${err.message}`);
     }
