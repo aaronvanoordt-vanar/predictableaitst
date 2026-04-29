@@ -3183,29 +3183,60 @@ function deleteLista(li) {
 
 async function enrichLista(li) {
   let stored = [];
-  try { stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]'); } catch(e) { return; }
+  try { stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]'); } catch(e) {}
   const list = stored[li];
-  if(!list) return;
+  if(!list) { alert('Lista no encontrada en índice ' + li); return; }
+
   const btn = document.getElementById(`enrich-btn-${li}`);
-  if(btn) { btn.textContent = '⏳ Obteniendo emails...'; btn.disabled = true; }
+  if(btn) { btn.textContent = '⏳ Iniciando...'; btn.disabled = true; }
 
-  await enrichContacts(list.contacts, (done, total) => {
-    if(!btn) return;
-    if(done === -1) btn.textContent = '⏳ Esperando teléfonos de Apollo...';
-    else btn.textContent = `⏳ ${done}/${total} procesados...`;
-  });
+  // Check if contacts have apolloId
+  const withId = list.contacts.filter(c => c.apolloId).length;
+  console.log('[enrichLista] contactos:', list.contacts.length, 'con apolloId:', withId);
 
-  // Save back to localStorage
+  if(withId === 0) {
+    if(btn) { btn.disabled = false; btn.textContent = '⚡ Enriquecer teléfonos'; }
+    alert('Estos contactos no tienen Apollo ID. Por favor guarda una nueva lista desde Apollo Sequences para poder enriquecer.');
+    return;
+  }
+
   try {
-    stored[li].contacts = list.contacts;
-    localStorage.setItem('apollo_lists', JSON.stringify(stored));
-  } catch(e) {}
+    await enrichContacts(list.contacts, (done, total) => {
+      const b = document.getElementById(`enrich-btn-${li}`);
+      if(!b) return;
+      if(done === -1) b.textContent = '⏳ Esperando teléfonos de Apollo (~12s)...';
+      else b.textContent = `⏳ ${done}/${total} procesados...`;
+    });
 
-  const withPhone = list.contacts.filter(c => c.phone && !c.phone.includes('disponible')).length;
-  renderSavedLists();
-  toggleListaCard(li);
-  const newBtn = document.getElementById(`enrich-btn-${li}`);
-  if(newBtn) newBtn.textContent = withPhone > 0 ? `✓ ${withPhone} teléfonos obtenidos` : '— Sin teléfonos en Apollo';
+    try {
+      stored[li].contacts = list.contacts;
+      localStorage.setItem('apollo_lists', JSON.stringify(stored));
+    } catch(e) {}
+
+    const withPhone = list.contacts.filter(c => c.phone && !c.phone.includes('disponible')).length;
+    const withEmail = list.contacts.filter(c => c.email && !c.email.includes('📧')).length;
+
+    // Update stats in header without full re-render
+    const statsEl = document.querySelector(`#lista-card-${li} [data-stats]`);
+
+    renderSavedLists();
+    // Keep card open
+    const body = document.getElementById(`lista-body-${li}`);
+    const chevron = document.getElementById(`lista-chevron-${li}`);
+    if(body) body.style.display = 'block';
+    if(chevron) chevron.style.transform = 'rotate(180deg)';
+
+    const newBtn = document.getElementById(`enrich-btn-${li}`);
+    if(newBtn) {
+      newBtn.textContent = withPhone > 0 ? `✓ ${withPhone} teléfonos obtenidos` : '— Sin teléfonos disponibles en Apollo';
+      newBtn.disabled = false;
+    }
+  } catch(err) {
+    console.error('[enrichLista] error:', err);
+    const b = document.getElementById(`enrich-btn-${li}`);
+    if(b) { b.textContent = '⚡ Reintentar'; b.disabled = false; }
+    alert('Error en enrichment: ' + err.message);
+  }
 }
 
 function exportListaCSV(li, mode) {
