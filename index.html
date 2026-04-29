@@ -2998,8 +2998,6 @@ const WORKER_BASE = 'https://predictableai.aaronvanoordt.workers.dev';
 const WEBHOOK_URL = WORKER_BASE + '/webhook/apollo';
 
 async function enrichContacts(contacts, onProgress) {
-  // Step 1: get emails via people/match (no webhook needed)
-  // Step 2: request phone reveal via webhook
   const ids = contacts.filter(c => c.apolloId).map(c => c.apolloId);
 
   // Get emails + trigger phone webhook for each contact
@@ -3010,39 +3008,67 @@ async function enrichContacts(contacts, onProgress) {
       const data = await apolloFetch('/people/match', { id: c.apolloId });
       const p = data.person || {};
       if(p.email && !(c.email||'').includes('📧')) c.email = p.email;
-      // Trigger async phone reveal
+      // Trigger async phone reveal — Apollo will POST to our webhook when ready
       apolloFetch('/people/match', { id: c.apolloId, reveal_phone_number: true, webhook_url: WEBHOOK_URL }).catch(()=>{});
     } catch(e) {}
     processed++;
     if(onProgress) onProgress(processed, contacts.length);
-    // Small delay to avoid rate limiting
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 150));
   }
 
-  // Step 3: wait for Apollo to send phones to webhook, then poll results
+  // Quick poll — Apollo sometimes responds within seconds
   if(ids.length) {
-    if(onProgress) onProgress(-1, contacts.length); // signal "waiting"
-    await new Promise(r => setTimeout(r, 12000)); // wait 12s for Apollo to process
-
-    // Poll results up to 3 times
-    for(let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const res = await fetch(WORKER_BASE + '/results', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ids })
-        });
-        const phones = await res.json();
-        let found = 0;
-        contacts.forEach(c => {
-          if(c.apolloId && phones[c.apolloId]) { c.phone = phones[c.apolloId]; found++; }
-        });
-        if(found > 0) break;
-      } catch(e) {}
-      if(attempt < 2) await new Promise(r => setTimeout(r, 8000));
-    }
+    if(onProgress) onProgress(-1, contacts.length);
+    await new Promise(r => setTimeout(r, 8000));
+    try {
+      const res = await fetch(WORKER_BASE + '/results', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids })
+      });
+      const phones = await res.json();
+      contacts.forEach(c => { if(c.apolloId && phones[c.apolloId]) c.phone = phones[c.apolloId]; });
+    } catch(e) {}
   }
-  return contacts;
+
+  return { contacts, pendingIds: ids };
+}
+
+async function checkPhones(li) {
+  let stored = [];
+  try { stored = JSON.parse(localStorage.getItem('apollo_lists') || '[]'); } catch(e) { return; }
+  const list = stored[li];
+  if(!list) return;
+  const btn = document.getElementById(`check-btn-${li}`);
+  if(btn) { btn.textContent = '🔄 Verificando...'; btn.disabled = true; }
+
+  const ids = (list.pendingPhoneIds || list.contacts.filter(c => c.apolloId).map(c => c.apolloId));
+  try {
+    const res = await fetch(WORKER_BASE + '/results', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids })
+    });
+    const phones = await res.json();
+    let found = 0;
+    list.contacts.forEach(c => { if(c.apolloId && phones[c.apolloId]) { c.phone = phones[c.apolloId]; found++; } });
+
+    stored[li].contacts = list.contacts;
+    if(found > 0) delete stored[li].pendingPhoneIds;
+    localStorage.setItem('apollo_lists', JSON.stringify(stored));
+
+    renderSavedLists();
+    const body = document.getElementById(`lista-body-${li}`);
+    const chevron = document.getElementById(`lista-chevron-${li}`);
+    if(body) body.style.display = 'block';
+    if(chevron) chevron.style.transform = 'rotate(180deg)';
+
+    const newBtn = document.getElementById(`check-btn-${li}`);
+    if(newBtn) {
+      newBtn.textContent = found > 0 ? `✓ ${found} teléfonos obtenidos` : '🔄 Verificar teléfonos';
+      newBtn.disabled = false;
+    }
+  } catch(e) {
+    if(btn) { btn.textContent = '🔄 Verificar teléfonos'; btn.disabled = false; }
+  }
 }
 
 async function runEnrichment() {
@@ -3133,6 +3159,7 @@ function renderSavedLists() {
             <button class="btn btn-ghost btn-sm" onclick="exportListaCSV(${li},'phone')">CSV Llamadas</button>
             <button class="btn btn-ghost btn-sm" onclick="exportListaCSV(${li},'full')">CSV Completo</button>
             <button class="btn btn-teal btn-sm" id="enrich-btn-${li}" onclick="enrichLista(${li})">⚡ Enriquecer teléfonos</button>
+            <button class="btn btn-ghost btn-sm" id="check-btn-${li}" onclick="checkPhones(${li})" style="display:${list.pendingPhoneIds && list.pendingPhoneIds.length ? 'inline-flex' : 'none'}">🔄 Verificar teléfonos</button>
             <button class="btn btn-ghost btn-sm" style="color:var(--red);opacity:.6" onclick="deleteLista(${li})">Eliminar</button>
           </div>
         </div>
@@ -3201,26 +3228,22 @@ async function enrichLista(li) {
   }
 
   try {
-    await enrichContacts(list.contacts, (done, total) => {
+    const { contacts: enriched, pendingIds } = await enrichContacts(list.contacts, (done, total) => {
       const b = document.getElementById(`enrich-btn-${li}`);
       if(!b) return;
-      if(done === -1) b.textContent = '⏳ Esperando teléfonos de Apollo (~12s)...';
+      if(done === -1) b.textContent = '⏳ Esperando respuesta de Apollo...';
       else b.textContent = `⏳ ${done}/${total} procesados...`;
     });
 
     try {
-      stored[li].contacts = list.contacts;
+      stored[li].contacts = enriched;
+      stored[li].pendingPhoneIds = pendingIds; // save for later check
       localStorage.setItem('apollo_lists', JSON.stringify(stored));
     } catch(e) {}
 
-    const withPhone = list.contacts.filter(c => c.phone && !c.phone.includes('disponible')).length;
-    const withEmail = list.contacts.filter(c => c.email && !c.email.includes('📧')).length;
-
-    // Update stats in header without full re-render
-    const statsEl = document.querySelector(`#lista-card-${li} [data-stats]`);
+    const withPhone = enriched.filter(c => c.phone && !c.phone.includes('disponible')).length;
 
     renderSavedLists();
-    // Keep card open
     const body = document.getElementById(`lista-body-${li}`);
     const chevron = document.getElementById(`lista-chevron-${li}`);
     if(body) body.style.display = 'block';
@@ -3228,9 +3251,12 @@ async function enrichLista(li) {
 
     const newBtn = document.getElementById(`enrich-btn-${li}`);
     if(newBtn) {
-      newBtn.textContent = withPhone > 0 ? `✓ ${withPhone} teléfonos obtenidos` : '— Sin teléfonos disponibles en Apollo';
+      newBtn.textContent = withPhone > 0 ? `✓ ${withPhone} teléfonos obtenidos` : '✓ Emails listos';
       newBtn.disabled = false;
     }
+    // Show check button since phones may arrive later
+    const checkBtn = document.getElementById(`check-btn-${li}`);
+    if(checkBtn && withPhone === 0) checkBtn.style.display = 'inline-flex';
   } catch(err) {
     console.error('[enrichLista] error:', err);
     const b = document.getElementById(`enrich-btn-${li}`);
