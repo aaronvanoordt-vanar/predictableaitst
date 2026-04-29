@@ -2846,11 +2846,7 @@ async function runApolloSearch() {
 
   } catch(err) {
     console.error('[Apollo] Error:', err);
-    if(err instanceof TypeError) {
-      showApiError('⚠ Error de conexión. Verifica tu conexión a internet e intenta de nuevo.');
-    } else {
-      showApiError(`Error Apollo API: ${err.message}`);
-    }
+    showApiError(`Error: ${err.message || err.toString()} (${err.constructor?.name})`);
   } finally {
     [btn, btn2].forEach(b => { if(b) { b.textContent='🔍 Buscar en Apollo'; b.disabled=false; } });
   }
