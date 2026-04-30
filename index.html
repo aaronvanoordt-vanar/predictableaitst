@@ -79,26 +79,8 @@ body::before {
 }
 
 .sidebar-logo {
-  padding: 22px 18px 18px;
+  padding: 18px 16px 16px;
   border-bottom: 1px solid var(--border);
-  display:flex; align-items:center; gap:11px;
-}
-
-.logo-icon {
-  width:30px; height:30px; border-radius:7px;
-  background: var(--grad-gold);
-  display:flex; align-items:center; justify-content:center;
-  font-family: var(--font-display); font-weight:800; font-size:13px; color:#fff;
-  box-shadow: 0 0 16px var(--gold-glow);
-}
-
-.logo-text {
-  font-family: var(--font-display);
-  font-size:15px; font-weight:700; color:var(--text); letter-spacing:-.3px;
-}
-.logo-sub {
-  font-family: var(--font-mono);
-  font-size:9px; color:var(--text3); letter-spacing:.8px; text-transform:uppercase; margin-top:2px;
 }
 
 .sidebar-section {
@@ -659,11 +641,46 @@ textarea { resize:vertical; min-height:76px; }
 ═══════════════════════════════════════════════════════ -->
 <nav class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-icon">P</div>
-    <div>
-      <div class="logo-text">predictable<span style="color:var(--teal)">.ai</span></div>
-      <div class="logo-sub">Revenue OS</div>
-    </div>
+    <svg viewBox="0 0 180 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:154px;height:auto;display:block">
+      <!-- Arrow + dollar mark -->
+      <circle cx="13" cy="38" r="7" fill="#1a6ef5"/>
+      <text x="13" y="42" text-anchor="middle" font-size="8" font-weight="700" fill="white" font-family="Arial">$</text>
+      <line x1="13" y1="31" x2="28" y2="16" stroke="#3b82f6" stroke-width="2.2" stroke-linecap="round"/>
+      <polyline points="20,14 28,14 28,22" stroke="#3b82f6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+
+      <!-- Wordmark: Predict -->
+      <text font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="17" fill="white">
+        <tspan x="36" y="32">Predict</tspan>
+      </text>
+
+      <!-- able -->
+      <text font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="17" fill="white">
+        <tspan x="94" y="32">able</tspan>
+      </text>
+
+      <!-- lightbulb above the "i" in Predict (~x=71) -->
+      <circle cx="72" cy="8" r="4" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+      <line x1="72" y1="12" x2="72" y2="15" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="70" y1="15" x2="74" y2="15" stroke="#3b82f6" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="72" y1="3" x2="72" y2="1" stroke="#3b82f6" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="68.5" y1="4.5" x2="67" y2="3" stroke="#3b82f6" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="75.5" y1="4.5" x2="77" y2="3" stroke="#3b82f6" stroke-width="1.2" stroke-linecap="round"/>
+
+      <!-- node connector between "able" and ".ai" -->
+      <circle cx="126" cy="27" r="2.5" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+      <circle cx="134" cy="22" r="2.5" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+      <circle cx="142" cy="27" r="2.5" fill="none" stroke="#3b82f6" stroke-width="1.5"/>
+      <line x1="128.5" y1="27" x2="131.5" y2="22" stroke="#3b82f6" stroke-width="1.2"/>
+      <line x1="136.5" y1="22" x2="139.5" y2="27" stroke="#3b82f6" stroke-width="1.2"/>
+
+      <!-- .ai in blue -->
+      <text font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="17" fill="#3b82f6">
+        <tspan x="146" y="32">.ai</tspan>
+      </text>
+
+      <!-- tagline -->
+      <text font-family="Arial,sans-serif" font-size="7" fill="#6b7fa3" letter-spacing="1.5" x="36" y="44">MAKE REVENUE PREDICTABLE.</text>
+    </svg>
   </div>
 
   <div class="sidebar-section">Overview</div>
