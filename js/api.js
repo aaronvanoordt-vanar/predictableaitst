@@ -72,5 +72,10 @@
 
     // Healthcheck opcional
     ping: () => call("ping", {}),
+     // ── Ventas AI ──
+    startMeeting:     (p) => call('startMeeting', p),
+    getMeetingState:  (p) => call('getMeetingState', p),
+    endMeeting:       (p) => call('endMeeting', p),
+    getSDRReport:     (p) => call('getSDRReport', p),
   };
 })(window);
