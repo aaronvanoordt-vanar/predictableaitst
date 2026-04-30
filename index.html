@@ -641,44 +641,47 @@ textarea { resize:vertical; min-height:76px; }
 ═══════════════════════════════════════════════════════ -->
 <nav class="sidebar">
   <div class="sidebar-logo">
-    <svg viewBox="0 0 160 46" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:148px;height:auto;display:block">
-      <!-- P icon mark: rounded rect background -->
-      <rect x="0" y="4" width="34" height="34" rx="7" fill="#0f1729"/>
-      <!-- Arrow shaft going up-right -->
-      <line x1="9" y1="30" x2="25" y2="14" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Arrowhead -->
-      <polyline points="16,12 25,12 25,21" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-      <!-- Dollar circle at base -->
-      <circle cx="9" cy="30" r="5.5" fill="#1d4ed8"/>
-      <text x="9" y="33.5" text-anchor="middle" font-size="6.5" font-weight="800" fill="white" font-family="Arial,sans-serif">$</text>
-
-      <!-- Wordmark -->
-      <text font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="14.5" fill="white" x="40" y="25">Predict</text>
-
-      <!-- Lightbulb above "i" (~x=82) -->
-      <circle cx="82" cy="6" r="3.2" fill="none" stroke="#3b82f6" stroke-width="1.3"/>
-      <line x1="82" y1="9.2" x2="82" y2="11.5" stroke="#3b82f6" stroke-width="1.3" stroke-linecap="round"/>
-      <line x1="80.2" y1="11.5" x2="83.8" y2="11.5" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/>
-      <line x1="82" y1="2.5" x2="82" y2="1" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/>
-      <line x1="79.5" y1="3.7" x2="78.3" y2="2.5" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/>
-      <line x1="84.5" y1="3.7" x2="85.7" y2="2.5" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/>
-
-      <!-- "able" white -->
-      <text font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="14.5" fill="white" x="101" y="25">able</text>
-
-      <!-- Node graph between able and .ai -->
-      <circle cx="126" cy="22" r="2" fill="none" stroke="#3b82f6" stroke-width="1.3"/>
-      <circle cx="132" cy="18" r="2" fill="none" stroke="#3b82f6" stroke-width="1.3"/>
-      <circle cx="138" cy="22" r="2" fill="none" stroke="#3b82f6" stroke-width="1.3"/>
-      <line x1="128" y1="22" x2="130" y2="18" stroke="#3b82f6" stroke-width="1"/>
-      <line x1="134" y1="18" x2="136" y2="22" stroke="#3b82f6" stroke-width="1"/>
-
-      <!-- .ai in blue -->
-      <text font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-size="14.5" fill="#3b82f6" x="141" y="25">.ai</text>
-
-      <!-- Tagline -->
-      <text font-family="Arial,sans-serif" font-size="6" fill="#4b5a7a" letter-spacing="1.2" x="40" y="37">MAKE REVENUE PREDICTABLE.</text>
-    </svg>
+    <div style="display:flex;align-items:center;gap:9px">
+      <!-- Left icon: diagonal arrow + dollar circle -->
+      <svg viewBox="0 0 28 28" fill="none" style="width:28px;height:28px;flex-shrink:0">
+        <line x1="7" y1="21" x2="22" y2="7" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round"/>
+        <polyline points="14,5 22,5 22,13" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="7" cy="21" r="6" fill="#1a4fd8"/>
+        <text x="7" y="25" text-anchor="middle" font-size="7.5" font-weight="800" fill="white" font-family="Arial,sans-serif">$</text>
+      </svg>
+      <!-- Text + decoratives -->
+      <div>
+        <div style="display:flex;align-items:center;line-height:1;gap:0;position:relative;padding-top:8px">
+          <!-- "Pred" -->
+          <span style="font-size:13.5px;font-weight:900;color:#fff;font-family:system-ui,-apple-system,'Helvetica Neue',sans-serif;letter-spacing:-.3px">Pred</span>
+          <!-- "i" with lightbulb above -->
+          <span style="position:relative;display:inline-block">
+            <svg viewBox="0 0 10 12" fill="none" style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);width:9px;height:9px">
+              <circle cx="5" cy="3.5" r="2.8" stroke="#3b82f6" stroke-width="1.3"/>
+              <line x1="5" y1="6.3" x2="5" y2="8.5" stroke="#3b82f6" stroke-width="1.3" stroke-linecap="round"/>
+              <line x1="3.2" y1="8.5" x2="6.8" y2="8.5" stroke="#3b82f6" stroke-width="1.1" stroke-linecap="round"/>
+              <line x1="5" y1="0.5" x2="5" y2="0" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/>
+              <line x1="2.5" y1="1.5" x2="1.8" y2="0.8" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/>
+              <line x1="7.5" y1="1.5" x2="8.2" y2="0.8" stroke="#3b82f6" stroke-width="1" stroke-linecap="round"/>
+            </svg>
+            <span style="font-size:13.5px;font-weight:900;color:#fff;font-family:system-ui,-apple-system,'Helvetica Neue',sans-serif">i</span>
+          </span>
+          <!-- "ctable" -->
+          <span style="font-size:13.5px;font-weight:900;color:#fff;font-family:system-ui,-apple-system,'Helvetica Neue',sans-serif;letter-spacing:-.3px">ctable</span>
+          <!-- Node graph connector -->
+          <svg viewBox="0 0 18 12" fill="none" style="width:15px;height:10px;margin:0 1px 1px">
+            <circle cx="3" cy="8" r="2" stroke="#3b82f6" stroke-width="1.3"/>
+            <circle cx="9" cy="3.5" r="2" stroke="#3b82f6" stroke-width="1.3"/>
+            <circle cx="15" cy="8" r="2" stroke="#3b82f6" stroke-width="1.3"/>
+            <line x1="5" y1="8" x2="7" y2="3.5" stroke="#3b82f6" stroke-width="1.1"/>
+            <line x1="11" y1="3.5" x2="13" y2="8" stroke="#3b82f6" stroke-width="1.1"/>
+          </svg>
+          <!-- ".ai" in blue -->
+          <span style="font-size:13.5px;font-weight:900;color:#3b82f6;font-family:system-ui,-apple-system,'Helvetica Neue',sans-serif;letter-spacing:-.3px">.ai</span>
+        </div>
+        <div style="font-size:6px;color:#3d4f6e;letter-spacing:1.4px;margin-top:4px;font-family:system-ui,sans-serif;white-space:nowrap">MAKE REVENUE PREDICTABLE.</div>
+      </div>
+    </div>
   </div>
 
   <div class="sidebar-section">Overview</div>
