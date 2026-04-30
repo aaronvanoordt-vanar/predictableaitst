@@ -177,8 +177,3 @@
   global.meetingCoach = { start, end };
 })(window);
  
-// agregar action al api wrapper
-window.api.startMeeting = (p) => window.api.__call ? window.api.__call('startMeeting', p) : null;
-window.api.getMeetingState = (p) => window.api.__call ? window.api.__call('getMeetingState', p) : null;
-window.api.endMeeting = (p) => window.api.__call ? window.api.__call('endMeeting', p) : null;
-window.api.getSDRReport = (p) => window.api.__call ? window.api.__call('getSDRReport', p) : null;
