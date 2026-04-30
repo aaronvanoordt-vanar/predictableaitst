@@ -2113,7 +2113,7 @@ textarea { resize:vertical; min-height:76px; }
     <div><div class="topbar-title">Ventas AI</div><div class="topbar-sub">Módulo 3 · Meeting coach en vivo + visibilidad total sobre tu equipo SDR</div></div>
     <div class="topbar-actions">
       <button class="btn btn-ghost btn-sm" onclick="nav(document.querySelector('[data-page=ventas-reportes]'),'ventas-reportes')">📊 Ver reportes</button>
-      <button class="btn btn-jade btn-sm" onclick="nav(document.querySelector('[data-page=ventas-coach]'),'ventas-coach')">🔴 Entrar a reunión</button>
+      <button class="btn btn-jade btn-sm" onclick="entrarAReunion()">🔴 Entrar a reunión</button>
     </div>
   </div>
 
@@ -2195,123 +2195,51 @@ textarea { resize:vertical; min-height:76px; }
 </div>
 
 <!-- ═══════ PAGE: VENTAS COACH ═══════ -->
-<div class="page fade-in" id="page-ventas-coach">
   <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div style="display:flex;align-items:center;gap:12px">
       <div style="width:10px;height:10px;border-radius:50%;background:#ef4444" class="pulse"></div>
       <div>
         <div class="topbar-title">Meeting Coach <span style="color:var(--green);font-size:13px;font-weight:500">EN VIVO</span></div>
-        <div class="topbar-sub">SaaS Ventures · Carlos Mendoza · CEO · 00:08:34</div>
+        <div class="topbar-sub" id="mc-meeting-info">Sin reunión activa · <span id="mc-timer">00:00:00</span></div>
       </div>
     </div>
     <div class="topbar-actions">
-      <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)">
-        <span style="color:var(--green);font-weight:700">IA Coach activo</span>
-        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
-      </div>
-      <button class="btn btn-ghost btn-sm">⏸ Pausar</button>
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="endMeeting()">■ Finalizar</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="window.meetingCoach.end()">■ Finalizar</button>
     </div>
   </div>
-
+ 
   <div class="meeting-layout">
-    <!-- LEFT: meeting + transcript -->
     <div class="meeting-main">
       <div class="meeting-video">
         <div style="font-size:48px">🎥</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text2)">Google Meet conectado</div>
-        <div style="font-size:12px;color:var(--text3)">Carlos Mendoza · SaaS Ventures</div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <span class="pill pill-green pulse">● Transcribiendo</span>
-          <span class="pill pill-blue">Analizando sentimiento</span>
-        </div>
+        <div style="font-size:14px;font-weight:600;color:var(--text2)" id="mc-status">Sin reunión activa</div>
       </div>
-
-      <!-- Live transcript -->
+ 
       <div class="chart-card" style="max-height:200px;overflow-y:auto">
         <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Transcripción en vivo</div>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;line-height:1.7">
-          <div><span style="color:var(--teal);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Mira, el tema es que ya tenemos HubSpot y la verdad funciona bastante bien para nosotros...</span></div>
-          <div><span style="color:var(--green);font-weight:700">Vendedor:</span> <span style="color:var(--text2)">Entiendo, ¿y cómo está siendo el proceso de forecast con HubSpot actualmente?</span></div>
-          <div><span style="color:var(--teal);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Bueno, ahí sí es un poco más manual... el equipo llena los campos pero depende mucho de cada persona...</span></div>
-          <div style="display:flex;align-items:center;gap:6px"><span style="color:var(--amber)">⚠</span><span style="color:var(--amber);font-size:11px;font-weight:600">SEÑAL DE DOLOR DETECTADA — Ver panel derecho</span></div>
-          <div><span style="color:var(--green);font-weight:700">Vendedor:</span> <span style="color:var(--text2)">¿Y eso ha causado alguna sorpresa al cierre de mes o de quarter?</span></div>
-          <div><span style="color:var(--teal);font-weight:700">Carlos:</span> <span style="color:var(--text2)">Jaja sí, la verdad el Q4 del año pasado fue medio desastre porque creímos que íbamos bien y...</span></div>
-        </div>
-      </div>
-
-      <div class="meeting-controls">
-        <button class="ctrl-btn active">🎤</button>
-        <button class="ctrl-btn">📷</button>
-        <button class="ctrl-btn">💻</button>
-        <button class="ctrl-btn">💬</button>
-        <button class="ctrl-btn danger" onclick="endMeeting()">✕ Finalizar</button>
+        <div id="mc-transcript" style="display:flex;flex-direction:column;gap:8px;font-size:12px;line-height:1.7"></div>
       </div>
     </div>
-
-    <!-- RIGHT: AI panel -->
-    <div class="ai-panel">
-      <!-- Prospect context -->
-      <div class="ai-suggestion" style="border-color:rgba(79,142,247,.3)">
-        <div class="ai-tag" style="color:var(--teal)">📋 Contexto del prospecto</div>
-        <div style="display:flex;flex-direction:column;gap:6px;font-size:12px">
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Score ICP</span><strong style="color:var(--green)">94</strong></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Último toque</span><strong>Email D3 abierto 3x</strong></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Industria</span><strong>SaaS B2B</strong></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Pain identificado</span><strong style="color:var(--amber)">Forecast caótico</strong></div>
-          <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Intelligence M1</span><strong style="color:var(--teal)">3 insights disponibles</strong></div>
-        </div>
-      </div>
-
-      <!-- LIVE objection alert -->
-      <div class="ai-suggestion" style="border:2px solid var(--amber);background:rgba(245,158,11,.06)">
-        <div class="ai-tag" style="color:var(--amber)">⚡ OBJECIÓN DETECTADA AHORA</div>
-        <div style="font-size:12px;font-weight:700;margin-bottom:6px">"Ya tenemos HubSpot"</div>
-        <div class="ai-text">No pelees con HubSpot. Reencuadra: HubSpot es CRM, Predictable es la capa de inteligencia encima. Son complementarios.</div>
-        <div style="background:var(--surface2);border-radius:6px;padding:10px;margin-top:8px;font-size:12px;line-height:1.7;color:var(--text)">
-          <strong style="color:var(--amber)">Di esto:</strong><br>
-          "Perfecto que tengan HubSpot — nosotros nos conectamos encima de él. La pregunta no es reemplazarlo, es: ¿están obteniendo predicciones confiables de qué deals van a cerrar este mes, o sigue siendo manual?"
-        </div>
-        <button class="ai-copy">📋 Copiar frase</button>
-      </div>
-
-      <!-- Positive signal -->
-      <div class="ai-suggestion" style="border-color:rgba(16,185,129,.3)">
-        <div class="ai-tag" style="color:var(--green)">✅ SEÑAL POSITIVA</div>
-        <div class="ai-text">Mencionó "Q4 desastre" — esto es dolor real y urgente. Profundiza: ¿cuánto impacto tuvo en el negocio? ¿qué pasó exactamente?</div>
-        <div style="background:var(--surface2);border-radius:6px;padding:10px;margin-top:8px;font-size:12px;color:var(--text)">
-          <strong style="color:var(--green)">Pregunta ahora:</strong><br>
-          "Cuando dices que fue un desastre el Q4, ¿fue más un problema de visibilidad o de que el equipo no cerró lo que se esperaba?"
-        </div>
-        <button class="ai-copy">📋 Copiar</button>
-      </div>
-
-      <!-- Stage guidance -->
-      <div class="ai-suggestion">
-        <div class="ai-tag" style="color:var(--gold)">🗺 ETAPA ACTUAL</div>
-        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">Discovery — Profundización del dolor</div>
-        <div class="ai-text">Estás en el momento ideal para el framework SPIN: Situación confirmada ✓, Problema emergiendo. Falta: Implicación y Need-Payoff.</div>
-        <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px">
-          <div style="font-size:11px;font-weight:700;color:var(--text3)">PRÓXIMOS PASOS SUGERIDOS</div>
-          <div style="font-size:12px;padding:6px 8px;background:var(--surface2);border-radius:6px">1. Cuantificar el dolor del Q4</div>
-          <div style="font-size:12px;padding:6px 8px;background:var(--surface2);border-radius:6px">2. Preguntar por el impacto en el equipo</div>
-          <div style="font-size:12px;padding:6px 8px;background:var(--surface2);border-radius:6px">3. Plantear la visión del ideal antes del demo</div>
-        </div>
-      </div>
-
-      <!-- Score live -->
+ 
+    <div class="ai-panel" id="mc-events">
       <div class="ai-suggestion">
         <div class="ai-tag" style="color:var(--text3)">📊 SCORE EN VIVO</div>
         <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Escucha activa</span><span style="font-size:11px;font-weight:700;color:var(--green)">82%</span></div><div class="score-bar"><div class="score-fill" style="width:82%;background:var(--grad-jade)"></div></div></div>
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Profundización del dolor</span><span style="font-size:11px;font-weight:700;color:var(--teal)">71%</span></div><div class="score-bar"><div class="score-fill" style="width:71%;background:var(--gradient-gold)"></div></div></div>
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Control del ritmo</span><span style="font-size:11px;font-weight:700;color:var(--amber)">58%</span></div><div class="score-bar"><div class="score-fill" style="width:58%;background:linear-gradient(90deg,#2563EB,#1E40AF)"></div></div></div>
-          <div class="score-row"><div class="score-label"><span style="font-size:11px">Manejo de objeciones</span><span style="font-size:11px;font-weight:700;color:var(--green)">79%</span></div><div class="score-bar"><div class="score-fill" style="width:79%;background:var(--grad-jade)"></div></div></div>
+          <div id="mc-score-listening" class="score-row"><div class="score-label"><span style="font-size:11px">Escucha activa</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--green)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:var(--grad-jade)"></div></div></div>
+          <div id="mc-score-pain" class="score-row"><div class="score-label"><span style="font-size:11px">Profundización del dolor</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--teal)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:var(--gradient-gold)"></div></div></div>
+          <div id="mc-score-pace" class="score-row"><div class="score-label"><span style="font-size:11px">Control del ritmo</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--amber)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:linear-gradient(90deg,#2563EB,#1E40AF)"></div></div></div>
+          <div id="mc-score-objection" class="score-row"><div class="score-label"><span style="font-size:11px">Manejo de objeciones</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--green)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:var(--grad-jade)"></div></div></div>
         </div>
+      </div>
+ 
+      <div class="ai-suggestion">
+        <div class="ai-tag" style="color:var(--gold)">🗺 ETAPA ACTUAL</div>
+        <div id="mc-stage" style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">—</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">PRÓXIMOS PASOS SUGERIDOS</div>
+        <div id="mc-next-steps" style="display:flex;flex-direction:column;gap:6px"></div>
       </div>
     </div>
   </div>
-</div>
 
 <!-- ═══════ PAGE: VENTAS REPORTES ═══════ -->
 <div class="page fade-in" id="page-ventas-reportes">
@@ -2565,6 +2493,20 @@ function endMeeting() {
   nav(document.querySelector('[data-page=ventas-reportes]'), 'ventas-reportes');
   setTimeout(() => switchReportTab(document.querySelectorAll('#page-ventas-reportes .tab')[3], 'rep-meeting'), 100);
 }
+  
+function entrarAReunion() {
+  const url = prompt('Pega la URL de la reunión (Google Meet, Zoom o Teams):');
+  if (!url) return;
+  nav(document.querySelector('[data-page=ventas-coach]'), 'ventas-coach');
+  setTimeout(function() {
+    window.meetingCoach.start(url, {
+      id: window.predictable && window.predictable.currentProspect && window.predictable.currentProspect.id,
+      name: window.predictable && window.predictable.currentProspect && window.predictable.currentProspect.name,
+      company: window.predictable && window.predictable.currentProspect && window.predictable.currentProspect.organization_name
+    });
+  }, 300);
+}
+
 
 // ── REPORT TABS ──
 function switchReportTab(el, tabId) {
