@@ -2398,87 +2398,37 @@ textarea { resize:vertical; min-height:76px; }
 
   <!-- TAB: ÚLTIMA REUNIÓN -->
   <div id="rep-meeting" class="rep-tab" style="display:none">
-    <div style="display:grid;grid-template-columns:1fr 320px;gap:16px">
-      <div style="display:flex;flex-direction:column;gap:16px">
-        <div class="chart-card">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
-            <div>
-              <div style="font-size:16px;font-weight:800">SaaS Ventures — Discovery Call</div>
-              <div style="font-size:12px;color:var(--text3);margin-top:3px">Carlos Mendoza · CEO · 14 Abr 2026 · 38 min · Google Meet</div>
-            </div>
-            <span class="pill pill-blue">Score: 77/100</span>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-            <div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:var(--green)">82%</div>
-              <div style="font-size:11px;color:var(--text3)">Escucha activa</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:var(--teal)">71%</div>
-              <div style="font-size:11px;color:var(--text3)">Profundización</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:var(--amber)">58%</div>
-              <div style="font-size:11px;color:var(--text3)">Control ritmo</div>
-            </div>
-            <div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px">
-              <div style="font-size:20px;font-weight:800;color:var(--green)">79%</div>
-              <div style="font-size:11px;color:var(--text3)">Objeciones</div>
-            </div>
-          </div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:10px">Resumen ejecutivo</div>
-          <div style="font-size:13px;color:var(--text2);line-height:1.8">
-            Reunión de discovery con Carlos Mendoza, CEO de SaaS Ventures (51-200 empleados, MX). Prospecto con <strong style="color:var(--text)">dolor claro y articulado en forecast</strong> — mencionó que el Q4 2025 fue problemático por falta de visibilidad. Tiene HubSpot pero reconoce que el proceso es manual y depende de cada persona en el equipo. <strong style="color:var(--green)">Alta intención de compra.</strong> Próximo paso: demo personalizado enfocado en el módulo de visibility + forecasting.
-          </div>
+  <div id="last-meeting-loading" style="text-align:center;padding:40px;color:var(--text3)">
+    Cargando última reunión...
+  </div>
+  <div id="last-meeting-content" style="display:none">
+    <div class="chart-card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+        <div>
+          <div style="font-size:16px;font-weight:800" id="lm-title">—</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px" id="lm-meta">—</div>
         </div>
-        <div class="chart-card">
-          <div style="font-size:13px;font-weight:700;margin-bottom:12px">Momentos clave detectados por IA</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--green-dim);border-radius:8px">
-              <span style="color:var(--green);font-weight:700;min-width:50px">00:08</span>
-              <div style="font-size:12px"><strong style="color:var(--green)">PAIN POINT</strong> — Mencionó "Q4 desastre" por falta de visibilidad en pipeline</div>
-            </div>
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(245,158,11,.08);border-radius:8px">
-              <span style="color:var(--amber);font-weight:700;min-width:50px">00:14</span>
-              <div style="font-size:12px"><strong style="color:var(--amber)">OBJECIÓN</strong> — "Ya tenemos HubSpot" → vendedor reencuadró correctamente</div>
-            </div>
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--blue-dim);border-radius:8px">
-              <span style="color:var(--teal);font-weight:700;min-width:50px">00:26</span>
-              <div style="font-size:12px"><strong style="color:var(--teal)">INTERÉS</strong> — Preguntó por integración con HubSpot y tiempo de implementación</div>
-            </div>
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:var(--green-dim);border-radius:8px">
-              <span style="color:var(--green);font-weight:700;min-width:50px">00:34</span>
-              <div style="font-size:12px"><strong style="color:var(--green)">COMPROMISO</strong> — Aceptó demo la próxima semana. "Quiero que lo vea también mi director comercial"</div>
-            </div>
-          </div>
-        </div>
+        <span class="pill pill-blue" id="lm-score">Score: —</span>
       </div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div class="chart-card">
-          <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--green)">✅ Próximos pasos acordados</div>
-          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
-            <div style="display:flex;gap:8px"><span style="color:var(--green)">→</span> Demo personalizado — Vie 18 Abr 10:00</div>
-            <div style="display:flex;gap:8px"><span style="color:var(--green)">→</span> Incluir al Director Comercial</div>
-            <div style="display:flex;gap:8px"><span style="color:var(--green)">→</span> Enviar caso de estudio similar</div>
-            <div style="display:flex;gap:8px"><span style="color:var(--green)">→</span> Preparar ROI estimado</div>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--amber)">⚠ Áreas de mejora (SDR)</div>
-          <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:var(--text2)">
-            <div>Interrumpió al prospecto 3 veces — trabajar escucha</div>
-            <div>No cuantificó el impacto del Q4 en dinero</div>
-            <div>Cerró sin proponer fecha específica (tuvo que el prospecto)</div>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--teal)">📊 Probabilidad de cierre</div>
-          <div style="font-size:32px;font-weight:900;color:var(--teal);text-align:center;margin:8px 0">72%</div>
-          <div style="font-size:11px;color:var(--text3);text-align:center">Basado en señales de la reunión + historial del ICP</div>
-          <div style="margin-top:10px;height:6px;background:var(--surface3);border-radius:3px"><div style="width:72%;height:100%;background:var(--gradient-gold);border-radius:3px"></div></div>
-        </div>
-      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px" id="lm-scores"></div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px">Resumen</div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7" id="lm-verdict">—</div>
     </div>
+    <div class="chart-card" style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--green)">✓ Lo que hizo bien</div>
+      <ul id="lm-highlights" style="margin:0;padding-left:20px;font-size:12px;line-height:1.8;color:var(--text2)"></ul>
+    </div>
+    <div class="chart-card" style="margin-bottom:16px">
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--amber)">⚠ Lo que se perdió</div>
+      <ul id="lm-missed" style="margin:0;padding-left:20px;font-size:12px;line-height:1.8;color:var(--text2)"></ul>
+    </div>
+    <div class="chart-card">
+      <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--teal)">→ Próximos pasos</div>
+      <ul id="lm-next" style="margin:0;padding-left:20px;font-size:12px;line-height:1.8;color:var(--text2)"></ul>
+    </div>
+  </div>
+  <div id="last-meeting-empty" style="display:none;text-align:center;padding:40px;color:var(--text3)">
+    No hay reuniones grabadas todavía. Cuando termines tu primera reunión con el AI Coach, verás el reporte aquí.
   </div>
 </div>
 </main>
@@ -2520,6 +2470,7 @@ function switchReportTab(el, tabId) {
   // Init charts on demand
   if (tabId === 'rep-equipo') initReportCharts();
   if (tabId === 'rep-deals') initDealsCharts();
+  if (tabId === 'rep-meeting') loadLastMeeting();
 }
 
 function initReportCharts() {
@@ -2568,6 +2519,45 @@ function initDealsCharts() {
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}}, y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#8A9BBF'}} } }
   });
 }
+async function loadLastMeeting() {
+  const loading = document.getElementById('last-meeting-loading');
+  const content = document.getElementById('last-meeting-content');
+  const empty = document.getElementById('last-meeting-empty');
+  loading.style.display = 'block';
+  content.style.display = 'none';
+  empty.style.display = 'none';
+  try {
+    const data = await window.api.getLastMeetingReport({});
+    loading.style.display = 'none';
+    if (!data) { empty.style.display = 'block'; return; }
+    const r = data.report || {};
+    document.getElementById('lm-title').textContent = data.prospect_name + ' — Reunión de venta';
+    document.getElementById('lm-meta').textContent = (data.sdr_email || 'SDR') + ' · ' + new Date(data.started_at).toLocaleDateString();
+    document.getElementById('lm-score').textContent = 'Score: ' + (data.score_total || r.score_total || 0) + '/100';
+    document.getElementById('lm-verdict').textContent = r.verdict || 'Sin resumen disponible.';
+    const scores = r.scores || {};
+    const scoreHTML = [
+      ['Escucha activa', scores.active_listening, 'var(--green)'],
+      ['Profundización', scores.pain_deepening, 'var(--teal)'],
+      ['Control ritmo', scores.pace_control, 'var(--amber)'],
+      ['Objeciones', scores.objection_handling, 'var(--green)']
+    ].map(([label, val, color]) =>
+      '<div style="text-align:center;padding:12px;background:var(--surface2);border-radius:8px">' +
+      '<div style="font-size:20px;font-weight:800;color:' + color + '">' + (val || 0) + '%</div>' +
+      '<div style="font-size:11px;color:var(--text3)">' + label + '</div></div>'
+    ).join('');
+    document.getElementById('lm-scores').innerHTML = scoreHTML;
+    document.getElementById('lm-highlights').innerHTML = (r.highlights || []).map(h => '<li>' + h + '</li>').join('') || '<li style="color:var(--text3)">—</li>';
+    document.getElementById('lm-missed').innerHTML = (r.missed || []).map(m => '<li>' + m + '</li>').join('') || '<li style="color:var(--text3)">—</li>';
+    document.getElementById('lm-next').innerHTML = (r.next_steps || []).map(n => '<li>' + n + '</li>').join('') || '<li style="color:var(--text3)">—</li>';
+    content.style.display = 'block';
+  } catch (e) {
+    loading.style.display = 'none';
+    empty.style.display = 'block';
+    empty.textContent = 'Error cargando reporte: ' + e.message;
+  }
+}
+  
 </script>
 
 <!-- ═══════════════════════════════════════════
