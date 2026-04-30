@@ -23,7 +23,7 @@
       setMeetingStatus('connecting');
  
       // Empezar polling cada 6s
-      pollTimer = setInterval(poll, 6000);
+      pollTimer = setInterval(poll, 4000);
       // Empezar timer
       elapsedTimer = setInterval(updateElapsed, 1000);
  
@@ -43,6 +43,13 @@
       lastSeenTs = data.server_ts;
  
       if (data.chunks?.length) renderTranscript(data.chunks);
+      // Si hay chunks nuevos pero NO eventos nuevos, muestra "pensando"
+      if (data.chunks?.length && !data.events?.length) {
+        showThinking();
+      }
+      if (data.events?.length) {
+        hideThinking();
+      }
       if (data.events?.length) renderEvents(data.events);
       if (data.events?.length) {
         const latestState = data.events[data.events.length - 1].state;
@@ -173,7 +180,21 @@
       ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   }
   function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
- 
+ function showThinking() {
+    let el = document.getElementById('mc-thinking');
+    if (el) return; // ya está
+    el = document.createElement('div');
+    el.id = 'mc-thinking';
+    el.className = 'ai-suggestion';
+    el.style.cssText = 'border:1px dashed var(--teal);background:rgba(0,196,212,.05);animation:pulse 1.5s infinite';
+    el.innerHTML = '<div class="ai-tag" style="color:var(--teal)">🧠 ANALIZANDO LO ÚLTIMO QUE SE DIJO</div><div class="ai-text" style="font-size:11px;color:var(--text3)">El coach está procesando la conversación...</div>';
+    const events = document.getElementById('mc-events');
+    if (events) events.prepend(el);
+  }
+  function hideThinking() {
+    const el = document.getElementById('mc-thinking');
+    if (el) el.remove();
+  }
   global.meetingCoach = { start, end };
 })(window);
  
