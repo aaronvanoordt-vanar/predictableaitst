@@ -1,8 +1,3 @@
-#!/usr/bin/env python3
-# Servidor proxy local para Apollo API
-# Uso: python3 server.py
-# Luego abre http://localhost:3000 en tu navegador
-
 import http.server, urllib.request, urllib.parse, json, os, sys
 
 PORT = 3000
