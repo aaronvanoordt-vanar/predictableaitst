@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="ag" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+  </defs>
+  <!-- P letterform: thick stroke open-counter P -->
+  <path d="M18 86 L18 14 Q18 9 23 9 L52 9 Q80 9 80 31 Q80 54 52 54 L18 54"
+        stroke="white" stroke-width="13" fill="none"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Arrow shaft: from near $ circle to upper-right inside P bowl -->
+  <line x1="30" y1="77" x2="56" y2="33"
+        stroke="url(#ag)" stroke-width="8" stroke-linecap="round"/>
+  <!-- Arrowhead: open V at tip -->
+  <polyline points="46,27 57,32 52,44"
+            stroke="url(#ag)" stroke-width="8"
+            stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Dollar circle at arrow tail -->
+  <circle cx="22" cy="83" r="13" fill="#2563eb"/>
+  <text x="22" y="88" text-anchor="middle"
+        font-size="15" font-weight="900" fill="white"
+        font-family="Arial, sans-serif">$</text>
+</svg>
