@@ -1,18 +1,19 @@
 // js/config.js
 // ───────────────────────────────────────────────────────────
-// Única cosa que tienes que editar cuando despliegues el Apps
-// Script: pega aquí la URL /exec que te da Google al publicar
-// como Web App.
+// Configuración pública del frontend.
+// Las API keys (Deepgram, OpenAI) NO van aquí — el repo es público.
+// Se piden con prompt() al SDR la primera vez y se guardan en
+// localStorage del navegador.
 // ───────────────────────────────────────────────────────────
 window.PREDICTABLE_CONFIG = {
+  // Backend Apps Script
   APPS_SCRIPT_URL: "https://script.google.com/macros/s/AKfycbxWQsb07WZxqbqld04M4rLIQRypONsY7s3EIczFBpV6PvIHDbSrSnfLp4nohLJTBG4jmw/exec",
-
-  // Timeout defensivo para llamadas (ms)
+ 
   REQUEST_TIMEOUT_MS: 60000,
-
-  // Tamaño de página por defecto en búsquedas Apollo
   APOLLO_DEFAULT_PER_PAGE: 25,
-
-  // Email del usuario actual (se puede sobreescribir desde el login real)
   CURRENT_USER_EMAIL: "aaronvanoordt@gmail.com",
+ 
+  // ── Real-Time Coach ─────────────────────────────────────
+  LLM_MODEL: "gpt-4o-mini",          // modelo para coaching live
+  COACH_TRIGGER_UTTERANCES: 2,       // cuántas frases del lead antes de pedir coaching
 };
