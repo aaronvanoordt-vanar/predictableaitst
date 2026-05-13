@@ -710,35 +710,46 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FIX v3 — Scroll global + Meeting Coach layout
-   (sin forzar width:100% a todos los hijos — eso rompía
-    el topbar que usa margins negativos)
+   FIX v3.1 — Layout sin overflow horizontal
+   El body era display:flex y la sidebar es position:fixed.
+   Eso causaba que .main midiera 100vw + 228px de margin.
+   Solución: forzar .main a calc(100vw - 228px).
 ═══════════════════════════════════════════════════════════ */
 html, body { height:100%; overflow:hidden; }
 
-/* MAIN: scroll vertical activo, NUNCA horizontal */
+/* MAIN: ancho calculado correctamente, sin sumar al viewport */
 .main {
+  position:absolute !important;
+  left:228px !important;
+  top:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  margin-left:0 !important;
+  width:auto !important;
+  flex:none !important;
   height:100vh !important;
   max-height:100vh !important;
   overflow-y:auto !important;
   overflow-x:hidden !important;
   -webkit-overflow-scrolling:touch;
   scroll-behavior:smooth;
+  box-sizing:border-box !important;
 }
 
-/* PAGE: permitir que crezca naturalmente, sin comprimirse */
+/* PAGE: ocupar el ancho de .main sin sobrepasarse */
 .page {
   flex-shrink:0 !important;
   min-height:auto !important;
   height:auto !important;
-  box-sizing:border-box;
+  max-width:100% !important;
+  box-sizing:border-box !important;
 }
 
 /* Scrollbar profesional */
 .main::-webkit-scrollbar { width:8px; }
 .main::-webkit-scrollbar-track { background:rgba(255,255,255,0.02); }
-.main::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:4px; }
-.main::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.22); }
+.main::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.14); border-radius:4px; }
+.main::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.24); }
 
 /* ── Meeting Coach: layout pro ── */
 #page-ventas-coach .mc-grid {
@@ -748,24 +759,18 @@ html, body { height:100%; overflow:hidden; }
   width:100%;
 }
 #page-ventas-coach .mc-grid > * { min-width:0; }
-
-/* En pantallas chicas, colapsar a 1 columna */
 @media (max-width: 1024px) {
-  #page-ventas-coach .mc-grid {
-    grid-template-columns:1fr;
-  }
+  #page-ventas-coach .mc-grid { grid-template-columns:1fr; }
 }
 
-/* ── Mejoras UX ── */
+/* ── Mejoras UX globales ── */
 .card, .chart-card, .table-card {
   transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
 .btn { transition:transform .15s ease, background .2s ease, box-shadow .2s ease; }
 .btn:active { transform:scale(0.97); }
 .nav-item { transition:background .2s ease, color .2s ease; }
-
 ::selection { background:rgba(0,196,212,.3); color:var(--text); }
-
 button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   outline:2px solid var(--teal);
   outline-offset:2px;
