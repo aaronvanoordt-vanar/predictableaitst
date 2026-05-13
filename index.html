@@ -708,6 +708,36 @@ html, body {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* ── FIX v3.5: Ancho exacto del .main para evitar overflow horizontal ── */
+.main {
+  width: calc(100vw - 228px) !important;
+  max-width: calc(100vw - 228px) !important;
+  flex: none !important;
+  overflow-x: hidden !important;
+}
+.page { flex-shrink: 0 !important; }
+
+/* Meeting Coach: panel coach con scroll interno cuando se llena */
+#page-ventas-coach .mc-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) !important;
+  gap: 18px !important;
+  align-items: start !important;
+}
+#page-ventas-coach .mc-grid > * { min-width: 0 !important; }
+#page-ventas-coach .mc-grid > div:nth-child(2) {
+  max-height: calc(100vh - 280px) !important;
+  overflow-y: auto !important;
+  padding-right: 6px !important;
+}
+@media (max-width: 1024px) {
+  #page-ventas-coach .mc-grid { grid-template-columns: 1fr !important; }
+  #page-ventas-coach .mc-grid > div:nth-child(2) {
+    max-height: none !important; overflow-y: visible !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2140,8 +2170,6 @@ html, body {
     </div>
   </div>
 </div>
-
-</main>
 
 <!-- ═══════ PAGE: VENTAS OVERVIEW ═══════ -->
 <div class="page fade-in" id="page-ventas-overview">
