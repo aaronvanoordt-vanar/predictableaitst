@@ -1,9 +1,9 @@
 // js/realtime-coach.js
 // ═══════════════════════════════════════════════════════════
-// Real-Time Meeting Coach
-// Captura audio del tab → AudioContext (PCM 16kHz) → Deepgram →
-// OpenAI → render en vivo.
-// Keys NO en repo — vienen de localStorage (prompt 1ra vez).
+// Real-Time Coach con captura dual:
+//   - Tab del Meet (canal IZQ → Lead)
+//   - Micrófono del SDR (canal DER → SDR)
+// → Deepgram multichannel → separa speakers por canal
 // ═══════════════════════════════════════════════════════════
 (function (global) {
   const cfg = global.PREDICTABLE_CONFIG || {};
@@ -11,10 +11,11 @@
                 function (msg) { console.log(msg); };
 
   let keys = null;
-  let stream = null;
+  let displayStream = null;
+  let micStream = null;
   let audioCtx = null;
-  let audioSource = null;
   let audioProcessor = null;
+  let mergeNodes = [];
   let dgSocket = null;
   let utteranceBuffer = [];
   let coachInFlight = false;
@@ -25,31 +26,25 @@
   let recentTranscript = [];
   let active = false;
 
-  // ─── KEYS via localStorage ────────────────────────────────
+  // ─── KEYS ─────────────────────────────────────────────────
   function getKey(name, label) {
     let k = localStorage.getItem('px_' + name);
     if (!k) {
       k = prompt('Pega tu API key de ' + label + ' (se guarda solo en este navegador):');
-      if (k) {
-        k = k.trim();
-        localStorage.setItem('px_' + name, k);
-      }
+      if (k) { k = k.trim(); localStorage.setItem('px_' + name, k); }
     }
     return k && k.trim();
   }
   function ensureKeys() {
     const dg = getKey('deepgram', 'Deepgram');
     const oa = getKey('openai', 'OpenAI');
-    if (!dg || !oa) {
-      alert('Sin API keys el coach en vivo no funciona.');
-      return null;
-    }
+    if (!dg || !oa) { alert('Sin API keys el coach no funciona.'); return null; }
     return { deepgram: dg, openai: oa };
   }
   function resetKeys() {
     localStorage.removeItem('px_deepgram');
     localStorage.removeItem('px_openai');
-    alert('Keys borradas. Refresca y vuelve a iniciar coach.');
+    alert('Keys borradas. Refresca la página.');
   }
   global.resetCoachKeys = resetKeys;
 
@@ -59,24 +54,32 @@
     if (!keys) return;
 
     try {
-      console.log('[Coach] Solicitando captura de pantalla...');
-      stream = await navigator.mediaDevices.getDisplayMedia({
+      console.log('[Coach] 1/3 Pidiendo captura de pantalla con audio...');
+      displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
-        audio: {
-          echoCancellation: false,
-          noiseSuppression: false,
-          autoGainControl: false
-        }
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });
 
-      const audioTracks = stream.getAudioTracks();
-      console.log('[Coach] Audio tracks:', audioTracks.length);
-      if (audioTracks.length === 0) {
-        stream.getTracks().forEach(function (t) { t.stop(); });
+      if (displayStream.getAudioTracks().length === 0) {
+        displayStream.getTracks().forEach(function (t) { t.stop(); });
         toast('Debes marcar "Compartir audio del tab" al elegir la pantalla', 'error');
         return;
       }
+      console.log('[Coach] Tab audio OK');
 
+      console.log('[Coach] 2/3 Pidiendo permiso del micrófono...');
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+        console.log('[Coach] Mic del SDR OK');
+      } catch (e) {
+        console.warn('[Coach] Sin mic:', e);
+        toast('No se pudo acceder a tu micrófono. Solo se escuchará al prospecto.', 'warn');
+        micStream = null;
+      }
+
+      console.log('[Coach] 3/3 Registrando meeting en backend...');
       const res = await global.api.startMeeting({
         meeting_url: 'local-capture://realtime',
         prospect_id: prospectContext && prospectContext.id,
@@ -86,7 +89,6 @@
       });
       currentMeetingId = res.meeting_id;
       active = true;
-      console.log('[Coach] Meeting registrado:', currentMeetingId);
 
       clearUI();
       setStatus('connecting');
@@ -94,9 +96,9 @@
       elapsedTimer = setInterval(updateElapsed, 1000);
 
       connectDeepgram();
-      startAudioCapture(stream);
+      startAudioCapture();
 
-      stream.getVideoTracks()[0].onended = function () {
+      displayStream.getVideoTracks()[0].onended = function () {
         toast('Captura detenida desde el navegador', 'warn');
         end();
       };
@@ -109,37 +111,69 @@
     }
   }
 
-  // ─── AUDIO CAPTURE con AudioContext (PCM 16kHz) ───────────
-  function startAudioCapture(srcStream) {
+  // ─── AUDIO CAPTURE — Tab (L) + Mic (R) en stereo ──────────
+  function startAudioCapture() {
     try {
-      const audioOnly = new MediaStream(srcStream.getAudioTracks());
       audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
       console.log('[Coach] AudioContext sampleRate:', audioCtx.sampleRate);
 
-      audioSource = audioCtx.createMediaStreamSource(audioOnly);
-      audioProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+      const tabAudio = new MediaStream(displayStream.getAudioTracks());
+      const tabSource = audioCtx.createMediaStreamSource(tabAudio);
+      const tabGain = audioCtx.createGain();
+      tabGain.gain.value = 1.0;
+      tabSource.connect(tabGain);
+
+      const merger = audioCtx.createChannelMerger(2);
+      // Canal 0 (izq) = tab/Lead
+      tabGain.connect(merger, 0, 0);
+
+      if (micStream) {
+        const micSource = audioCtx.createMediaStreamSource(micStream);
+        const micGain = audioCtx.createGain();
+        micGain.gain.value = 0.8;
+        micSource.connect(micGain);
+        // Canal 1 (der) = mic/SDR
+        micGain.connect(merger, 0, 1);
+      } else {
+        // Sin mic: meter silencio en canal R para mantener stereo
+        const silent = audioCtx.createConstantSource();
+        silent.offset.value = 0;
+        silent.start();
+        silent.connect(merger, 0, 1);
+        mergeNodes.push(silent);
+      }
+
+      audioProcessor = audioCtx.createScriptProcessor(4096, 2, 2);
 
       audioProcessor.onaudioprocess = function (e) {
         if (!dgSocket || dgSocket.readyState !== WebSocket.OPEN) return;
-        const input = e.inputBuffer.getChannelData(0);
-        const int16 = new Int16Array(input.length);
-        for (let i = 0; i < input.length; i++) {
-          const s = Math.max(-1, Math.min(1, input[i]));
-          int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        const left = e.inputBuffer.getChannelData(0);
+        const right = e.inputBuffer.numberOfChannels > 1
+          ? e.inputBuffer.getChannelData(1)
+          : new Float32Array(left.length);
+
+        // Intercalar canales: L,R,L,R,... como Int16 PCM
+        const interleaved = new Int16Array(left.length * 2);
+        for (let i = 0; i < left.length; i++) {
+          const sL = Math.max(-1, Math.min(1, left[i]));
+          const sR = Math.max(-1, Math.min(1, right[i]));
+          interleaved[i * 2] = sL < 0 ? sL * 0x8000 : sL * 0x7FFF;
+          interleaved[i * 2 + 1] = sR < 0 ? sR * 0x8000 : sR * 0x7FFF;
         }
-        dgSocket.send(int16.buffer);
+        dgSocket.send(interleaved.buffer);
       };
 
-      audioSource.connect(audioProcessor);
+      merger.connect(audioProcessor);
       audioProcessor.connect(audioCtx.destination);
-      console.log('[Coach] AudioContext capture iniciada');
+      mergeNodes.push(merger, tabGain, audioProcessor);
+      console.log('[Coach] Audio capture dual iniciada (tab=L, mic=R)');
     } catch (e) {
       console.error('[Coach] AudioContext error:', e);
       toast('Error de audio: ' + e.message, 'error');
     }
   }
 
-  // ─── DEEPGRAM ─────────────────────────────────────────────
+  // ─── DEEPGRAM (multichannel) ──────────────────────────────
   function connectDeepgram() {
     const params = [
       'model=nova-2-general',
@@ -151,17 +185,15 @@
       'punctuate=true',
       'encoding=linear16',
       'sample_rate=16000',
-      'channels=1'
+      'channels=2',
+      'multichannel=true'
     ].join('&');
 
     const url = 'wss://api.deepgram.com/v1/listen?' + params;
-    console.log('[Coach] Conectando Deepgram...');
+    console.log('[Coach] Conectando Deepgram multichannel...');
     dgSocket = new WebSocket(url, ['token', keys.deepgram]);
 
-    dgSocket.onopen = function () {
-      console.log('[Coach] Deepgram WebSocket abierto');
-      setStatus('live');
-    };
+    dgSocket.onopen = function () { console.log('[Coach] Deepgram WebSocket abierto'); setStatus('live'); };
     dgSocket.onmessage = function (event) {
       try {
         const msg = JSON.parse(event.data);
@@ -171,14 +203,9 @@
     };
     dgSocket.onerror = function (e) {
       console.error('[Coach] Deepgram error:', e);
-      toast('Error de Deepgram. Verifica saldo y key. Consola: resetCoachKeys()', 'error');
+      toast('Error de Deepgram. Consola: resetCoachKeys()', 'error');
     };
-    dgSocket.onclose = function (e) {
-      console.log('[Coach] Deepgram cerrado:', e.code, e.reason);
-      if (e.code === 1006 || e.code === 1011) {
-        toast('Deepgram se desconectó. Si la key es nueva, espera 1 min antes de probar.', 'warn');
-      }
-    };
+    dgSocket.onclose = function (e) { console.log('[Coach] Deepgram cerrado:', e.code, e.reason); };
   }
 
   function handleTranscript(msg) {
@@ -187,14 +214,17 @@
     const text = alt.transcript.trim();
     if (!text) return;
 
+    // channel_index: [canal, total_canales]. Canal 0 = Lead, 1 = SDR
+    const channelIdx = (msg.channel_index && msg.channel_index[0]) || 0;
+    const speaker = channelIdx === 1 ? 'SDR' : 'Lead';
     const isFinal = msg.is_final;
-    const speaker = 'Lead';
+
     showInterim(speaker, text, isFinal);
 
     if (isFinal) {
       utteranceBuffer.push({ speaker: speaker, text: text, ts: new Date() });
       recentTranscript.push(speaker + ': ' + text);
-      if (recentTranscript.length > 20) recentTranscript.shift();
+      if (recentTranscript.length > 25) recentTranscript.shift();
       appendFinalToTranscript(speaker, text);
       enqueueChunkForBackend({ speaker: speaker, text: text, ts: new Date().toISOString() });
     }
@@ -214,8 +244,8 @@
     const context = recentTranscript.slice(-15).join('\n');
     const systemPrompt = [
       'Eres el coach de ventas de Predictable.ai en vivo durante una llamada B2B.',
-      'Recibes la conversación reciente y decides si hay algo accionable.',
-      'Si no hay nada, devuelve alerts: [].',
+      'La conversación tiene 2 hablantes: "Lead" (prospecto) y "SDR" (vendedor).',
+      'Analiza la dinámica entre ambos y decide si hay algo accionable para el SDR.',
       'OUTPUT: SOLO JSON con schema:',
       '{',
       '  "alerts": [{',
@@ -227,16 +257,15 @@
       '  "stage": "rapport|discovery|reframe|demo|negotiation|close",',
       '  "next_step": "1 acción inmediata"',
       '}',
-      'Habla en español neutro. Sé directo. NO inventes alertas.'
+      'Si el SDR está hablando mucho y el Lead poco, sugiere preguntar.',
+      'Si el Lead dice algo crítico sin profundizar, sugiere pregunta de implicación.',
+      'Habla español neutro. NO inventes alertas.'
     ].join('\n');
 
     try {
       const resp = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + keys.openai
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + keys.openai },
         body: JSON.stringify({
           model: cfg.LLM_MODEL || 'gpt-4o-mini',
           temperature: 0.3,
@@ -252,9 +281,7 @@
         const errTxt = await resp.text();
         console.error('OpenAI ' + resp.status + ': ' + errTxt);
         toast('Error OpenAI ' + resp.status, 'error');
-        hideThinking();
-        coachInFlight = false;
-        return;
+        hideThinking(); coachInFlight = false; return;
       }
 
       const data = await resp.json();
@@ -275,25 +302,17 @@
   }
 
   // ─── PERSISTENCE ──────────────────────────────────────────
-  function enqueueChunkForBackend(c) {
-    chunkQueue.push(c);
-    if (chunkQueue.length >= 3) flushChunks();
-  }
+  function enqueueChunkForBackend(c) { chunkQueue.push(c); if (chunkQueue.length >= 3) flushChunks(); }
   async function flushChunks() {
     if (!currentMeetingId || chunkQueue.length === 0) return;
     const batch = chunkQueue.splice(0);
-    try {
-      await global.api.ingestLocalChunks({ meeting_id: currentMeetingId, chunks: batch });
-    } catch (e) {
-      console.warn('flushChunks error', e);
-      chunkQueue = batch.concat(chunkQueue);
-    }
+    try { await global.api.ingestLocalChunks({ meeting_id: currentMeetingId, chunks: batch }); }
+    catch (e) { console.warn('flushChunks error', e); chunkQueue = batch.concat(chunkQueue); }
   }
   async function enqueueEventForBackend(ev) {
     if (!currentMeetingId) return;
-    try {
-      await global.api.ingestLocalEvent({ meeting_id: currentMeetingId, event: ev });
-    } catch (e) { console.warn('event persist error', e); }
+    try { await global.api.ingestLocalEvent({ meeting_id: currentMeetingId, event: ev }); }
+    catch (e) { console.warn('event persist error', e); }
   }
 
   // ─── UI ───────────────────────────────────────────────────
@@ -306,18 +325,20 @@
   function showInterim(speaker, text, isFinal) {
     const el = document.getElementById('mc-last-spoken');
     if (!el) return;
+    const color = speaker === 'SDR' ? 'var(--green)' : 'var(--teal)';
     el.innerHTML =
       '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">' +
       (isFinal ? 'Lo último que se dijo' : 'Escuchando...') + '</div>' +
       '<div style="font-size:15px;color:' + (isFinal ? 'var(--text)' : 'var(--text3)') +
       ';line-height:1.5;font-style:' + (isFinal ? 'normal' : 'italic') + '">' +
-      '<strong style="color:var(--teal)">' + esc(speaker) + ':</strong> ' + esc(text) + '</div>';
+      '<strong style="color:' + color + '">' + esc(speaker) + ':</strong> ' + esc(text) + '</div>';
   }
   function appendFinalToTranscript(speaker, text) {
     const c = document.getElementById('mc-transcript');
     if (!c) return;
+    const color = speaker === 'SDR' ? 'var(--green)' : 'var(--teal)';
     const div = document.createElement('div');
-    div.innerHTML = '<span style="color:var(--teal);font-weight:700">' + esc(speaker) + ':</span> ' +
+    div.innerHTML = '<span style="color:' + color + ';font-weight:700">' + esc(speaker) + ':</span> ' +
       '<span style="color:var(--text2)">' + esc(text) + '</span>';
     c.appendChild(div);
     c.scrollTop = c.scrollHeight;
@@ -362,14 +383,11 @@
     const events = document.getElementById('mc-events');
     if (events) events.prepend(el);
   }
-  function hideThinking() {
-    const el = document.getElementById('mc-thinking');
-    if (el) el.remove();
-  }
+  function hideThinking() { const el = document.getElementById('mc-thinking'); if (el) el.remove(); }
   function setStatus(s) {
     const el = document.getElementById('mc-status');
     if (!el) return;
-    const map = { connecting: 'Conectando al audio del tab...', live: '🎙 Escuchando en vivo', ended: 'Sesión finalizada' };
+    const map = { connecting: 'Conectando al audio del tab y mic...', live: '🎙 Escuchando (tú + lead)', ended: 'Sesión finalizada' };
     el.textContent = map[s] || s;
   }
   function updateElapsed() {
@@ -399,15 +417,16 @@
   }
   function cleanup() {
     if (audioProcessor) { try { audioProcessor.disconnect(); } catch (e) {} audioProcessor = null; }
-    if (audioSource) { try { audioSource.disconnect(); } catch (e) {} audioSource = null; }
+    mergeNodes.forEach(function (n) { try { n.disconnect(); } catch (e) {} });
+    mergeNodes = [];
     if (audioCtx) { try { audioCtx.close(); } catch (e) {} audioCtx = null; }
-    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+    if (displayStream) { displayStream.getTracks().forEach(function (t) { t.stop(); }); displayStream = null; }
+    if (micStream) { micStream.getTracks().forEach(function (t) { t.stop(); }); micStream = null; }
     if (dgSocket) { try { dgSocket.close(); } catch (e) {} dgSocket = null; }
     if (elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; }
     utteranceBuffer = [];
   }
 
-  // ─── HELPERS ──────────────────────────────────────────────
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
