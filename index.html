@@ -675,7 +675,7 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FIX: Meeting Coach ocupa todo el ancho disponible
+   FIX: Meeting Coach ocupa todo el ancho
 ═══════════════════════════════════════════════════════════ */
 #page-ventas-coach {
   width: 100% !important;
@@ -689,9 +689,8 @@ html, body {
   align-self: stretch !important;
   width: 100% !important;
   max-width: 100% !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
   box-sizing: border-box !important;
+  flex-shrink: 0 !important;
 }
 #page-ventas-coach .mc-grid {
   display: grid !important;
@@ -701,6 +700,13 @@ html, body {
 }
 #page-ventas-coach .mc-grid > * {
   min-width: 0 !important;
+}
+
+/* Responsive: en pantallas chicas, colapsar a 1 columna */
+@media (max-width: 1024px) {
+  #page-ventas-coach .mc-grid {
+    grid-template-columns: 1fr !important;
+  }
 }
 </style>
 </head>
