@@ -710,66 +710,28 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FIX DEFINITIVO v3.2 — CSS Grid layout responsive
-   
-   Causa raíz del bug anterior:
-   body era display:flex con sidebar position:fixed.
-   La sidebar salía del flujo, el .main con flex:1 tomaba 100vw,
-   y el margin-left:228px lo empujaba causando overflow.
-   
-   Solución: body como CSS Grid de 2 columnas (228px + 1fr).
-   Matemáticamente exacto, responsive nativo, sin overflow.
+   FIX v3.3 — Solo forzar ancho exacto del .main con calc()
+   NO toca el body. NO toca grid. NO position:absolute.
+   Solo le dice al .main: tu ancho es 100vw - sidebar_width.
 ═══════════════════════════════════════════════════════════ */
-html { height:100%; overflow:hidden; }
 
-body {
-  display:grid !important;
-  grid-template-columns:228px 1fr !important;
-  grid-template-rows:100vh !important;
-  height:100vh !important;
-  max-height:100vh !important;
-  overflow:hidden !important;
-  min-height:0 !important;
-}
+/* Body queda igual (display:flex original) */
 
-.sidebar {
-  position:relative !important;
-  left:auto !important;
-  top:auto !important;
-  width:auto !important;
-  min-width:0 !important;
-  height:100vh !important;
-  overflow-y:auto !important;
-  overflow-x:hidden !important;
-  grid-column:1 !important;
-  grid-row:1 !important;
-}
 .sidebar img { max-width:100%; height:auto; }
+.sidebar { overflow-y:auto; overflow-x:hidden; }
 
+/* MAIN: ancho calculado exactamente, sin desbordar */
 .main {
-  position:relative !important;
-  margin:0 !important;
-  margin-left:0 !important;
-  width:auto !important;
-  min-width:0 !important;
-  flex:none !important;
-  height:100vh !important;
-  max-height:100vh !important;
-  overflow-y:auto !important;
-  overflow-x:hidden !important;
-  grid-column:2 !important;
-  grid-row:1 !important;
-  -webkit-overflow-scrolling:touch;
-  scroll-behavior:smooth;
-  display:block !important;
+  width: calc(100vw - 228px) !important;
+  max-width: calc(100vw - 228px) !important;
+  flex: none !important;
+  overflow-x: hidden !important;
 }
 
+/* PAGE: que respete el ancho del main */
 .page {
-  flex-shrink:0 !important;
-  min-height:auto !important;
-  height:auto !important;
-  max-width:100% !important;
-  box-sizing:border-box !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Scrollbar profesional */
@@ -777,38 +739,38 @@ body {
 .main::-webkit-scrollbar-track { background:rgba(255,255,255,0.02); }
 .main::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.14); border-radius:4px; }
 .main::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.24); }
-.sidebar::-webkit-scrollbar { width:5px; }
-.sidebar::-webkit-scrollbar-track { background:transparent; }
-.sidebar::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:3px; }
 
 /* ─── RESPONSIVE ─── */
-/* Tablets grandes (1024-1280px): sidebar más compacto */
 @media (max-width: 1280px) {
-  body { grid-template-columns:200px 1fr !important; }
+  .sidebar { width:200px !important; min-width:200px !important; }
+  .main {
+    margin-left:200px !important;
+    width: calc(100vw - 200px) !important;
+    max-width: calc(100vw - 200px) !important;
+  }
 }
-
-/* Tablets (768-1024px): sidebar mínimo */
 @media (max-width: 1024px) {
-  body { grid-template-columns:180px 1fr !important; }
+  .sidebar { width:180px !important; min-width:180px !important; }
+  .main {
+    margin-left:180px !important;
+    width: calc(100vw - 180px) !important;
+    max-width: calc(100vw - 180px) !important;
+  }
   .nav-item { font-size:11.5px !important; padding:7px 10px !important; }
-  .sidebar-section { padding:14px 12px 4px !important; }
 }
-
-/* Mobile (<768px): sidebar como drawer overlay */
 @media (max-width: 768px) {
-  body { grid-template-columns:1fr !important; }
   .sidebar {
-    position:fixed !important;
-    left:0 !important; top:0 !important;
-    width:240px !important;
-    z-index:1000 !important;
-    transform:translateX(-100%);
-    transition:transform .3s ease;
+    transform: translateX(-100%);
+    transition: transform .3s ease;
+    z-index:1000;
     box-shadow:4px 0 24px rgba(0,0,0,.4);
   }
-  .sidebar.mobile-open { transform:translateX(0); }
-  .main { grid-column:1 !important; }
-  /* Botón hamburger flotante para mobile */
+  .sidebar.mobile-open { transform: translateX(0); }
+  .main {
+    margin-left:0 !important;
+    width:100vw !important;
+    max-width:100vw !important;
+  }
   .mobile-menu-btn {
     display:flex !important;
     position:fixed; top:14px; left:14px;
@@ -816,12 +778,12 @@ body {
     border-radius:8px;
     background:var(--surface); border:1px solid var(--border);
     align-items:center; justify-content:center;
-    z-index:999; cursor:pointer;
+    z-index:999; cursor:pointer; color:var(--text);
   }
 }
 .mobile-menu-btn { display:none; }
 
-/* ─── Meeting Coach layout responsive ─── */
+/* ─── Meeting Coach grid ─── */
 #page-ventas-coach .mc-grid {
   display:grid;
   grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
@@ -840,24 +802,18 @@ body {
   gap:16px !important;
 }
 
-/* ─── Mejoras UX globales ─── */
-.card, .chart-card, .table-card {
-  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
-}
+/* ─── UX globales ─── */
 .btn { transition:transform .15s ease, background .2s ease, box-shadow .2s ease; }
 .btn:active { transform:scale(0.97); }
-.nav-item { transition:background .2s ease, color .2s ease; }
 ::selection { background:rgba(0,196,212,.3); color:var(--text); }
 button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
-  outline:2px solid var(--teal);
-  outline-offset:2px;
+  outline:2px solid var(--teal); outline-offset:2px;
 }
 
 </style>
 </head>
 <body>
 
-<!-- Mobile menu button -->
 <button class="mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open')" aria-label="Menú">
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
     <line x1="3" y1="6" x2="17" y2="6"/>
