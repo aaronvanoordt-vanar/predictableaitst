@@ -710,33 +710,60 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FIX v3.1 — Layout sin overflow horizontal
-   El body era display:flex y la sidebar es position:fixed.
-   Eso causaba que .main midiera 100vw + 228px de margin.
-   Solución: forzar .main a calc(100vw - 228px).
+   FIX DEFINITIVO v3.2 — CSS Grid layout responsive
+   
+   Causa raíz del bug anterior:
+   body era display:flex con sidebar position:fixed.
+   La sidebar salía del flujo, el .main con flex:1 tomaba 100vw,
+   y el margin-left:228px lo empujaba causando overflow.
+   
+   Solución: body como CSS Grid de 2 columnas (228px + 1fr).
+   Matemáticamente exacto, responsive nativo, sin overflow.
 ═══════════════════════════════════════════════════════════ */
-html, body { height:100%; overflow:hidden; }
+html { height:100%; overflow:hidden; }
 
-/* MAIN: ancho calculado correctamente, sin sumar al viewport */
+body {
+  display:grid !important;
+  grid-template-columns:228px 1fr !important;
+  grid-template-rows:100vh !important;
+  height:100vh !important;
+  max-height:100vh !important;
+  overflow:hidden !important;
+  min-height:0 !important;
+}
+
+.sidebar {
+  position:relative !important;
+  left:auto !important;
+  top:auto !important;
+  width:auto !important;
+  min-width:0 !important;
+  height:100vh !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  grid-column:1 !important;
+  grid-row:1 !important;
+}
+.sidebar img { max-width:100%; height:auto; }
+
 .main {
-  position:absolute !important;
-  left:228px !important;
-  top:0 !important;
-  right:0 !important;
-  bottom:0 !important;
+  position:relative !important;
+  margin:0 !important;
   margin-left:0 !important;
   width:auto !important;
+  min-width:0 !important;
   flex:none !important;
   height:100vh !important;
   max-height:100vh !important;
   overflow-y:auto !important;
   overflow-x:hidden !important;
+  grid-column:2 !important;
+  grid-row:1 !important;
   -webkit-overflow-scrolling:touch;
   scroll-behavior:smooth;
-  box-sizing:border-box !important;
+  display:block !important;
 }
 
-/* PAGE: ocupar el ancho de .main sin sobrepasarse */
 .page {
   flex-shrink:0 !important;
   min-height:auto !important;
@@ -750,8 +777,51 @@ html, body { height:100%; overflow:hidden; }
 .main::-webkit-scrollbar-track { background:rgba(255,255,255,0.02); }
 .main::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.14); border-radius:4px; }
 .main::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.24); }
+.sidebar::-webkit-scrollbar { width:5px; }
+.sidebar::-webkit-scrollbar-track { background:transparent; }
+.sidebar::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:3px; }
 
-/* ── Meeting Coach: layout pro ── */
+/* ─── RESPONSIVE ─── */
+/* Tablets grandes (1024-1280px): sidebar más compacto */
+@media (max-width: 1280px) {
+  body { grid-template-columns:200px 1fr !important; }
+}
+
+/* Tablets (768-1024px): sidebar mínimo */
+@media (max-width: 1024px) {
+  body { grid-template-columns:180px 1fr !important; }
+  .nav-item { font-size:11.5px !important; padding:7px 10px !important; }
+  .sidebar-section { padding:14px 12px 4px !important; }
+}
+
+/* Mobile (<768px): sidebar como drawer overlay */
+@media (max-width: 768px) {
+  body { grid-template-columns:1fr !important; }
+  .sidebar {
+    position:fixed !important;
+    left:0 !important; top:0 !important;
+    width:240px !important;
+    z-index:1000 !important;
+    transform:translateX(-100%);
+    transition:transform .3s ease;
+    box-shadow:4px 0 24px rgba(0,0,0,.4);
+  }
+  .sidebar.mobile-open { transform:translateX(0); }
+  .main { grid-column:1 !important; }
+  /* Botón hamburger flotante para mobile */
+  .mobile-menu-btn {
+    display:flex !important;
+    position:fixed; top:14px; left:14px;
+    width:40px; height:40px;
+    border-radius:8px;
+    background:var(--surface); border:1px solid var(--border);
+    align-items:center; justify-content:center;
+    z-index:999; cursor:pointer;
+  }
+}
+.mobile-menu-btn { display:none; }
+
+/* ─── Meeting Coach layout responsive ─── */
 #page-ventas-coach .mc-grid {
   display:grid;
   grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
@@ -763,7 +833,14 @@ html, body { height:100%; overflow:hidden; }
   #page-ventas-coach .mc-grid { grid-template-columns:1fr; }
 }
 
-/* ── Mejoras UX globales ── */
+/* ─── Stat grids responsive ─── */
+.stat-grid {
+  display:grid !important;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap:16px !important;
+}
+
+/* ─── Mejoras UX globales ─── */
 .card, .chart-card, .table-card {
   transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
@@ -779,6 +856,16 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 </style>
 </head>
 <body>
+
+<!-- Mobile menu button -->
+<button class="mobile-menu-btn" onclick="document.querySelector('.sidebar').classList.toggle('mobile-open')" aria-label="Menú">
+  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2">
+    <line x1="3" y1="6" x2="17" y2="6"/>
+    <line x1="3" y1="10" x2="17" y2="10"/>
+    <line x1="3" y1="14" x2="17" y2="14"/>
+  </svg>
+</button>
+
 
 <!-- ═══════════════════════════════════════════════════════
      SIDEBAR
