@@ -77,7 +77,11 @@
     getMeetingState:  (p) => call('getMeetingState', p),
     endMeeting:       (p) => call('endMeeting', p),
     getSDRReport:     (p) => call('getSDRReport', p),
+    ingestLocalChunks: (p) => call('ingestLocalChunks', p),
+    ingestLocalEvent:  (p) => call('ingestLocalEvent', p),
 
     getLastMeetingReport: (p) => call('getLastMeetingReport', p || {}),
+
+
   };
 })(window);
