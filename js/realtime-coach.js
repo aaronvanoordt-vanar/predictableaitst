@@ -90,13 +90,36 @@
  
       connectDeepgram();
  
-      mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
-      mediaRecorder.ondataavailable = function (e) {
-        if (e.data.size > 0 && dgSocket && dgSocket.readyState === WebSocket.OPEN) {
-          dgSocket.send(e.data);
-        }
-      };
-      mediaRecorder.start(250);
+// Separar audio del video — MediaRecorder solo necesita audio
+const audioOnly = new MediaStream(stream.getAudioTracks());
+
+// Detectar el primer mimeType soportado por este navegador
+let mimeType = '';
+const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4'];
+for (let i = 0; i < candidates.length; i++) {
+  if (MediaRecorder.isTypeSupported(candidates[i])) {
+    mimeType = candidates[i];
+    break;
+  }
+}
+console.log('MediaRecorder mimeType:', mimeType || 'default');
+
+mediaRecorder = mimeType
+  ? new MediaRecorder(audioOnly, { mimeType: mimeType })
+  : new MediaRecorder(audioOnly);
+
+mediaRecorder.ondataavailable = function (e) {
+  if (e.data.size > 0 && dgSocket && dgSocket.readyState === WebSocket.OPEN) {
+    dgSocket.send(e.data);
+  }
+};
+
+mediaRecorder.onerror = function (ev) {
+  console.error('MediaRecorder error:', ev.error);
+  toast('Error de grabación: ' + (ev.error && ev.error.name), 'error');
+};
+
+mediaRecorder.start(250);
  
       stream.getVideoTracks()[0].onended = function () {
         toast('Captura detenida desde el navegador', 'warn');
