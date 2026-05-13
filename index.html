@@ -633,6 +633,48 @@ textarea { resize:vertical; min-height:76px; }
 /* number counter */
 .count-num { display:inline-block; }
 /* ═══════════════════════════════════════════════════════════
+   FIX GLOBAL: Scroll vertical en todas las pages
+═══════════════════════════════════════════════════════════ */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+.main {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.page {
+  flex-shrink: 0 !important;
+  min-height: auto !important;
+  height: auto !important;
+}
+
+.page.active {
+  flex-shrink: 0 !important;
+}
+
+/* Scrollbar más visible y profesional */
+.main::-webkit-scrollbar {
+  width: 8px;
+}
+.main::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.02);
+}
+.main::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 4px;
+}
+.main::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
    FIX: Meeting Coach ocupa todo el ancho disponible
 ═══════════════════════════════════════════════════════════ */
 #page-ventas-coach {
