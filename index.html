@@ -2157,54 +2157,89 @@ textarea { resize:vertical; min-height:76px; }
 
 <!-- ═══════ PAGE: VENTAS COACH ═══════ -->
 <div class="page fade-in" id="page-ventas-coach">
+
+  <!-- Topbar -->
   <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:10px;height:10px;border-radius:50%;background:#ef4444" class="pulse"></div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:12px;height:12px;border-radius:50%;background:#10B981;box-shadow:0 0 12px rgba(16,185,129,.6)" class="pulse"></div>
       <div>
-        <div class="topbar-title">Meeting Coach <span style="color:var(--green);font-size:13px;font-weight:500">EN VIVO</span></div>
-        <div class="topbar-sub" id="mc-meeting-info">Sin reunión activa · <span id="mc-timer">00:00:00</span></div>
+        <div class="topbar-title">Meeting Coach <span style="color:var(--green);font-size:12px;font-weight:600;background:rgba(16,185,129,.12);padding:3px 8px;border-radius:6px;margin-left:6px;letter-spacing:.5px">EN VIVO</span></div>
+        <div class="topbar-sub" id="mc-meeting-info">
+          <span id="mc-status" style="color:var(--text2)">Sin reunión activa</span>
+          · <span id="mc-timer" style="font-family:var(--font-mono);color:var(--text3)">00:00:00</span>
+        </div>
       </div>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="window.realtimeCoach && window.realtimeCoach.end()">■ Finalizar</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:rgba(232,64,64,.3)" onclick="window.realtimeCoach && window.realtimeCoach.end()">■ Finalizar</button>
     </div>
   </div>
- 
-  <div class="meeting-layout">
-    <div class="meeting-main">
-      <div class="meeting-video">
-        <div style="font-size:48px">🎥</div>
-        <div style="font-size:14px;font-weight:600;color:var(--text2)" id="mc-status">Sin reunión activa</div>
-        <div id="mc-last-spoken" style="padding:14px;background:var(--surface2);border-radius:8px;margin-top:12px;min-height:60px"></div>
+
+  <!-- HERO: lo último dicho (protagonista) -->
+  <div style="background:linear-gradient(135deg,rgba(0,196,212,.06) 0%,rgba(16,185,129,.04) 100%);border:1px solid rgba(0,196,212,.18);border-radius:14px;padding:28px 32px;min-height:140px;display:flex;flex-direction:column;justify-content:center">
+    <div id="mc-last-spoken" style="min-height:80px">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Esperando audio...</div>
+      <div style="font-size:14px;color:var(--text3);font-style:italic">Click "Iniciar coach en vivo" desde el overview y comparte el tab del Meet con audio para empezar.</div>
+    </div>
+  </div>
+
+  <!-- Grid principal: transcripción (izq) + coach (der) -->
+  <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-top:16px">
+
+    <!-- Columna izquierda: Transcripción completa -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;min-height:420px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <div style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px">📜 Transcripción completa</div>
+        <span class="pill pill-blue" style="font-size:10px">Live</span>
       </div>
- 
-      <div class="chart-card" style="max-height:200px;overflow-y:auto">
-        <div style="font-size:12px;font-weight:700;color:var(--text3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Transcripción en vivo</div>
-        <div id="mc-transcript" style="display:flex;flex-direction:column;gap:8px;font-size:12px;line-height:1.7"></div>
+      <div id="mc-transcript" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.7;max-height:520px;padding-right:6px">
+        <div style="color:var(--text3);font-size:12px;font-style:italic;text-align:center;padding:40px 0">La conversación aparecerá aquí en tiempo real...</div>
       </div>
     </div>
- 
-    <div class="ai-panel" id="mc-events">
-      <div class="ai-suggestion">
-        <div class="ai-tag" style="color:var(--text3)">📊 SCORE EN VIVO</div>
-        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-          <div id="mc-score-listening" class="score-row"><div class="score-label"><span style="font-size:11px">Escucha activa</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--green)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:var(--grad-jade)"></div></div></div>
-          <div id="mc-score-pain" class="score-row"><div class="score-label"><span style="font-size:11px">Profundización del dolor</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--teal)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:var(--gradient-gold)"></div></div></div>
-          <div id="mc-score-pace" class="score-row"><div class="score-label"><span style="font-size:11px">Control del ritmo</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--amber)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:linear-gradient(90deg,#2563EB,#1E40AF)"></div></div></div>
-          <div id="mc-score-objection" class="score-row"><div class="score-label"><span style="font-size:11px">Manejo de objeciones</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--green)">—</span></div><div class="score-bar"><div class="score-fill" style="width:0%;background:var(--grad-jade)"></div></div></div>
+
+    <!-- Columna derecha: Coach panel -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <!-- Etapa + próximos pasos -->
+      <div style="background:linear-gradient(135deg,rgba(240,192,96,.06),rgba(240,192,96,.02));border:1px solid rgba(240,192,96,.18);border-radius:12px;padding:16px">
+        <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🗺 Etapa actual</div>
+        <div id="mc-stage" style="font-size:18px;font-weight:800;color:var(--gold);margin-bottom:14px">—</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Próximos pasos</div>
+        <div id="mc-next-steps" style="display:flex;flex-direction:column;gap:6px">
+          <div style="font-size:12px;color:var(--text3);font-style:italic">Aparecerán cuando el coach analice...</div>
         </div>
       </div>
- 
-      <div class="ai-suggestion">
-        <div class="ai-tag" style="color:var(--gold)">🗺 ETAPA ACTUAL</div>
-        <div id="mc-stage" style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">—</div>
-        <div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">PRÓXIMOS PASOS SUGERIDOS</div>
-        <div id="mc-next-steps" style="display:flex;flex-direction:column;gap:6px"></div>
+
+      <!-- Score en vivo -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
+        <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">📊 Score en vivo</div>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <div id="mc-score-listening" class="score-row">
+            <div class="score-label"><span style="font-size:11px;color:var(--text2)">Escucha activa</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--green)">—</span></div>
+            <div class="score-bar"><div class="score-fill" style="width:0%;background:var(--grad-jade)"></div></div>
+          </div>
+          <div id="mc-score-pain" class="score-row">
+            <div class="score-label"><span style="font-size:11px;color:var(--text2)">Profundización del dolor</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--teal)">—</span></div>
+            <div class="score-bar"><div class="score-fill" style="width:0%;background:var(--gradient-gold)"></div></div>
+          </div>
+          <div id="mc-score-pace" class="score-row">
+            <div class="score-label"><span style="font-size:11px;color:var(--text2)">Control del ritmo</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--amber)">—</span></div>
+            <div class="score-bar"><div class="score-fill" style="width:0%;background:linear-gradient(90deg,#2563EB,#1E40AF)"></div></div>
+          </div>
+          <div id="mc-score-objection" class="score-row">
+            <div class="score-label"><span style="font-size:11px;color:var(--text2)">Manejo de objeciones</span><span class="score-num" style="font-size:11px;font-weight:700;color:var(--green)">—</span></div>
+            <div class="score-bar"><div class="score-fill" style="width:0%;background:var(--grad-jade)"></div></div>
+          </div>
+        </div>
       </div>
+
+      <!-- Alertas dinámicas (cards inyectadas por JS) -->
+      <div id="mc-events" style="display:flex;flex-direction:column;gap:10px"></div>
+
     </div>
   </div>
-</div>
 
+</div>
 <!-- ═══════ PAGE: VENTAS REPORTES ═══════ -->
 <div class="page fade-in" id="page-ventas-reportes">
   <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
