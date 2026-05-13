@@ -710,9 +710,13 @@ html, body {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   FIX GLOBAL v3: Scroll y layout profesional en todas las pages
+   FIX v3 — Scroll global + Meeting Coach layout
+   (sin forzar width:100% a todos los hijos — eso rompía
+    el topbar que usa margins negativos)
 ═══════════════════════════════════════════════════════════ */
 html, body { height:100%; overflow:hidden; }
+
+/* MAIN: scroll vertical activo, NUNCA horizontal */
 .main {
   height:100vh !important;
   max-height:100vh !important;
@@ -721,63 +725,47 @@ html, body { height:100%; overflow:hidden; }
   -webkit-overflow-scrolling:touch;
   scroll-behavior:smooth;
 }
+
+/* PAGE: permitir que crezca naturalmente, sin comprimirse */
 .page {
   flex-shrink:0 !important;
   min-height:auto !important;
   height:auto !important;
-  width:100% !important;
-  max-width:100% !important;
-  box-sizing:border-box !important;
+  box-sizing:border-box;
 }
-.page.active {
-  flex-shrink:0 !important;
-  align-items:stretch !important;
-}
-.page.active > * {
-  width:100% !important;
-  max-width:100% !important;
-  box-sizing:border-box !important;
-}
+
 /* Scrollbar profesional */
 .main::-webkit-scrollbar { width:8px; }
 .main::-webkit-scrollbar-track { background:rgba(255,255,255,0.02); }
 .main::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:4px; }
 .main::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,0.22); }
 
-/* ── Meeting Coach: layout full-width ── */
-#page-ventas-coach {
-  align-items:stretch !important;
-  justify-content:flex-start !important;
-}
-#page-ventas-coach > * { flex-shrink:0 !important; }
+/* ── Meeting Coach: layout pro ── */
 #page-ventas-coach .mc-grid {
-  display:grid !important;
-  grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr) !important;
-  gap:18px !important;
-  width:100% !important;
+  display:grid;
+  grid-template-columns:minmax(0, 1.6fr) minmax(0, 1fr);
+  gap:18px;
+  width:100%;
 }
-#page-ventas-coach .mc-grid > * { min-width:0 !important; }
+#page-ventas-coach .mc-grid > * { min-width:0; }
+
+/* En pantallas chicas, colapsar a 1 columna */
 @media (max-width: 1024px) {
   #page-ventas-coach .mc-grid {
-    grid-template-columns:1fr !important;
+    grid-template-columns:1fr;
   }
 }
 
-/* ── Mejoras UX generales ── */
+/* ── Mejoras UX ── */
 .card, .chart-card, .table-card {
   transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 }
-.card:hover, .chart-card:hover {
-  border-color:var(--border2);
-}
 .btn { transition:transform .15s ease, background .2s ease, box-shadow .2s ease; }
 .btn:active { transform:scale(0.97); }
-.nav-item { transition:background .2s ease, color .2s ease, padding .2s ease; }
+.nav-item { transition:background .2s ease, color .2s ease; }
 
-/* Selección de texto */
 ::selection { background:rgba(0,196,212,.3); color:var(--text); }
 
-/* Focus accesible */
 button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
   outline:2px solid var(--teal);
   outline-offset:2px;
@@ -2308,7 +2296,6 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
 <!-- ═══════ PAGE: VENTAS COACH ═══════ -->
 <div class="page fade-in" id="page-ventas-coach">
 
-  <!-- Topbar -->
   <div class="topbar" style="margin:-26px -26px 20px;border-radius:0">
     <div style="display:flex;align-items:center;gap:14px">
       <div style="width:12px;height:12px;border-radius:50%;background:#10B981;box-shadow:0 0 12px rgba(16,185,129,.6)" class="pulse"></div>
@@ -2325,18 +2312,15 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
     </div>
   </div>
 
-  <!-- HERO: lo último dicho -->
-  <div style="background:linear-gradient(135deg,rgba(0,196,212,.07),rgba(16,185,129,.04));border:1px solid rgba(0,196,212,.2);border-radius:14px;padding:28px 32px;min-height:140px;display:flex;flex-direction:column;justify-content:center;width:100%;box-sizing:border-box">
-    <div id="mc-last-spoken" style="min-height:80px;width:100%">
+  <div style="background:linear-gradient(135deg,rgba(0,196,212,.07),rgba(16,185,129,.04));border:1px solid rgba(0,196,212,.2);border-radius:14px;padding:28px 32px;min-height:140px;display:flex;flex-direction:column;justify-content:center">
+    <div id="mc-last-spoken" style="min-height:80px">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;font-family:var(--font-mono)">Esperando audio...</div>
       <div style="font-size:14px;color:var(--text3);font-style:italic">Click "Iniciar coach en vivo" desde el overview y comparte el tab del Meet con audio.</div>
     </div>
   </div>
 
-  <!-- Grid: transcripción + coach -->
   <div class="mc-grid">
 
-    <!-- Columna izquierda: Transcripción -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;min-height:480px;min-width:0">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px">📜 Transcripción completa</div>
@@ -2347,7 +2331,6 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible {
       </div>
     </div>
 
-    <!-- Columna derecha: Coach panel -->
     <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
 
       <div style="background:linear-gradient(135deg,rgba(240,192,96,.07),rgba(240,192,96,.02));border:1px solid rgba(240,192,96,.2);border-radius:12px;padding:16px">
