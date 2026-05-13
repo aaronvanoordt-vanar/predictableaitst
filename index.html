@@ -632,7 +632,34 @@ textarea { resize:vertical; min-height:76px; }
 
 /* number counter */
 .count-num { display:inline-block; }
-
+/* ═══════════════════════════════════════════════════════════
+   FIX: Meeting Coach ocupa todo el ancho disponible
+═══════════════════════════════════════════════════════════ */
+#page-ventas-coach {
+  width: 100% !important;
+  max-width: 100% !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  padding: 26px !important;
+  box-sizing: border-box !important;
+}
+#page-ventas-coach > * {
+  align-self: stretch !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+#page-ventas-coach .mc-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) !important;
+  gap: 16px !important;
+  width: 100% !important;
+}
+#page-ventas-coach .mc-grid > * {
+  min-width: 0 !important;
+}
 </style>
 </head>
 <body>
@@ -2164,7 +2191,7 @@ textarea { resize:vertical; min-height:76px; }
       <div style="width:12px;height:12px;border-radius:50%;background:#10B981;box-shadow:0 0 12px rgba(16,185,129,.6)" class="pulse"></div>
       <div>
         <div class="topbar-title">Meeting Coach <span style="color:var(--green);font-size:12px;font-weight:600;background:rgba(16,185,129,.12);padding:3px 8px;border-radius:6px;margin-left:6px;letter-spacing:.5px">EN VIVO</span></div>
-        <div class="topbar-sub" id="mc-meeting-info">
+        <div class="topbar-sub">
           <span id="mc-status" style="color:var(--text2)">Sin reunión activa</span>
           · <span id="mc-timer" style="font-family:var(--font-mono);color:var(--text3)">00:00:00</span>
         </div>
@@ -2175,32 +2202,31 @@ textarea { resize:vertical; min-height:76px; }
     </div>
   </div>
 
-  <!-- HERO: lo último dicho (protagonista) -->
-  <div style="background:linear-gradient(135deg,rgba(0,196,212,.06) 0%,rgba(16,185,129,.04) 100%);border:1px solid rgba(0,196,212,.18);border-radius:14px;padding:28px 32px;min-height:140px;display:flex;flex-direction:column;justify-content:center">
-    <div id="mc-last-spoken" style="min-height:80px">
+  <!-- HERO: lo último dicho -->
+  <div style="background:linear-gradient(135deg,rgba(0,196,212,.06),rgba(16,185,129,.04));border:1px solid rgba(0,196,212,.18);border-radius:14px;padding:28px 32px;min-height:140px;display:flex;flex-direction:column;justify-content:center;width:100%;box-sizing:border-box">
+    <div id="mc-last-spoken" style="min-height:80px;width:100%">
       <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Esperando audio...</div>
-      <div style="font-size:14px;color:var(--text3);font-style:italic">Click "Iniciar coach en vivo" desde el overview y comparte el tab del Meet con audio para empezar.</div>
+      <div style="font-size:14px;color:var(--text3);font-style:italic">Click "Iniciar coach en vivo" desde el overview y comparte el tab del Meet con audio.</div>
     </div>
   </div>
 
-  <!-- Grid principal: transcripción (izq) + coach (der) -->
-  <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-top:16px">
+  <!-- Grid principal -->
+  <div class="mc-grid">
 
-    <!-- Columna izquierda: Transcripción completa -->
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;min-height:420px">
+    <!-- Columna izquierda: Transcripción -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column;min-height:480px;min-width:0">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
         <div style="font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px">📜 Transcripción completa</div>
         <span class="pill pill-blue" style="font-size:10px">Live</span>
       </div>
-      <div id="mc-transcript" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.7;max-height:520px;padding-right:6px">
+      <div id="mc-transcript" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;font-size:13px;line-height:1.7;max-height:560px;padding-right:6px;min-width:0;word-wrap:break-word;overflow-wrap:break-word">
         <div style="color:var(--text3);font-size:12px;font-style:italic;text-align:center;padding:40px 0">La conversación aparecerá aquí en tiempo real...</div>
       </div>
     </div>
 
     <!-- Columna derecha: Coach panel -->
-    <div style="display:flex;flex-direction:column;gap:14px">
+    <div style="display:flex;flex-direction:column;gap:14px;min-width:0">
 
-      <!-- Etapa + próximos pasos -->
       <div style="background:linear-gradient(135deg,rgba(240,192,96,.06),rgba(240,192,96,.02));border:1px solid rgba(240,192,96,.18);border-radius:12px;padding:16px">
         <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">🗺 Etapa actual</div>
         <div id="mc-stage" style="font-size:18px;font-weight:800;color:var(--gold);margin-bottom:14px">—</div>
@@ -2210,7 +2236,6 @@ textarea { resize:vertical; min-height:76px; }
         </div>
       </div>
 
-      <!-- Score en vivo -->
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px">
         <div style="font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px">📊 Score en vivo</div>
         <div style="display:flex;flex-direction:column;gap:11px">
@@ -2233,7 +2258,6 @@ textarea { resize:vertical; min-height:76px; }
         </div>
       </div>
 
-      <!-- Alertas dinámicas (cards inyectadas por JS) -->
       <div id="mc-events" style="display:flex;flex-direction:column;gap:10px"></div>
 
     </div>
