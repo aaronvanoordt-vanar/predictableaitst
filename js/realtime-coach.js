@@ -1,13 +1,14 @@
 // js/realtime-coach.js
 // ═══════════════════════════════════════════════════════════
-// Real-Time Coach v2 — usa Cloudflare Worker como proxy.
-// El usuario NO necesita API keys propias.
+// Real-Time Coach v3 — Grant Token de Deepgram.
+// Worker da un token temporal (10 min). Cliente conecta DIRECTO
+// a Deepgram con ese token. Sin WebSocket relay = sin bugs.
 // ═══════════════════════════════════════════════════════════
 (function (global) {
   const cfg = global.PREDICTABLE_CONFIG || {};
   const toast = (global.uiHelpers && global.uiHelpers.toast) ||
                 function (msg) { console.log(msg); };
- 
+
   let displayStream = null;
   let micStream = null;
   let audioCtx = null;
@@ -21,40 +22,58 @@
   let currentMeetingId = null;
   let recentTranscript = [];
   let active = false;
- 
+
   function workerUrl(path) {
     const base = (cfg.WORKER_URL || '').replace(/\/$/, '');
     return base + path;
   }
-  function workerWsUrl(path) {
-    return workerUrl(path).replace(/^http/, 'ws');
+
+  // ─── PEDIR TOKEN TEMPORAL DE DEEPGRAM ─────────────────────
+  async function getDeepgramToken() {
+    const resp = await fetch(workerUrl('/deepgram-token'));
+    if (!resp.ok) {
+      const errTxt = await resp.text();
+      throw new Error('Worker /deepgram-token HTTP ' + resp.status + ': ' + errTxt);
+    }
+    const data = await resp.json();
+    if (!data.access_token) {
+      throw new Error('Worker no devolvió access_token. Body: ' + JSON.stringify(data));
+    }
+    console.log('[Coach] Token Deepgram obtenido (expira en ' + data.expires_in + 's)');
+    return data.access_token;
   }
- 
+
   // ─── INICIO ───────────────────────────────────────────────
   async function start(prospectContext) {
     if (!cfg.WORKER_URL) {
       alert('WORKER_URL no configurado en js/config.js'); return;
     }
     try {
-      console.log('[Coach] 1/3 Pidiendo captura de pantalla...');
+      console.log('[Coach] 1/4 Pidiendo token a Deepgram via Worker...');
+      const dgToken = await getDeepgramToken();
+
+      console.log('[Coach] 2/4 Pidiendo captura de pantalla...');
       displayStream = await navigator.mediaDevices.getDisplayMedia({
         video: true,
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
       });
- 
+
       if (displayStream.getAudioTracks().length === 0) {
         displayStream.getTracks().forEach(function (t) { t.stop(); });
         toast('Debes marcar "Compartir audio del tab"', 'error'); return;
       }
- 
-      console.log('[Coach] 2/3 Pidiendo permiso del mic...');
+
+      console.log('[Coach] 3/4 Pidiendo permiso del mic...');
       try {
         micStream = await navigator.mediaDevices.getUserMedia({
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
         });
-      } catch (e) { console.warn('[Coach] Sin mic:', e); micStream = null; }
- 
-      console.log('[Coach] 3/3 Registrando meeting...');
+        console.log('[Coach] Mic OK');
+      } catch (e) {
+        console.warn('[Coach] Sin mic:', e); micStream = null;
+      }
+
+      console.log('[Coach] 4/4 Registrando meeting...');
       const res = await global.api.startMeeting({
         meeting_url: 'local-capture://realtime',
         prospect_id: prospectContext && prospectContext.id,
@@ -64,15 +83,16 @@
       });
       currentMeetingId = res.meeting_id;
       active = true;
- 
+
       clearUI();
       setStatus('connecting');
       elapsedSeconds = 0;
       elapsedTimer = setInterval(updateElapsed, 1000);
- 
-      connectDeepgram();
+
+      // ─── CONECTAR DIRECTO A DEEPGRAM CON TOKEN TEMPORAL ─
+      connectDeepgramDirect(dgToken);
       startAudioCapture();
- 
+
       displayStream.getVideoTracks()[0].onended = function () {
         toast('Captura detenida', 'warn'); end();
       };
@@ -83,19 +103,21 @@
       cleanup();
     }
   }
- 
+
   function startAudioCapture() {
     try {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+      console.log('[Coach] AudioContext sampleRate:', audioCtx.sampleRate);
+
       const tabAudio = new MediaStream(displayStream.getAudioTracks());
       const tabSource = audioCtx.createMediaStreamSource(tabAudio);
       const tabGain = audioCtx.createGain();
       tabGain.gain.value = 1.0;
       tabSource.connect(tabGain);
- 
+
       const merger = audioCtx.createChannelMerger(2);
       tabGain.connect(merger, 0, 0);
- 
+
       if (micStream) {
         const micSource = audioCtx.createMediaStreamSource(micStream);
         const micGain = audioCtx.createGain();
@@ -108,8 +130,9 @@
         silent.start();
         silent.connect(merger, 0, 1);
       }
- 
+
       audioProcessor = audioCtx.createScriptProcessor(4096, 2, 2);
+      let frameCount = 0;
       audioProcessor.onaudioprocess = function (e) {
         if (!dgSocket || dgSocket.readyState !== WebSocket.OPEN) return;
         const left = e.inputBuffer.getChannelData(0);
@@ -122,31 +145,35 @@
           interleaved[i*2+1] = sR < 0 ? sR * 0x8000 : sR * 0x7FFF;
         }
         dgSocket.send(interleaved.buffer);
+        frameCount++;
+        if (frameCount === 1) console.log('[Coach] Primer frame de audio enviado a Deepgram');
+        if (frameCount % 100 === 0) console.log('[Coach] Frames enviados:', frameCount);
       };
- 
+
       merger.connect(audioProcessor);
       audioProcessor.connect(audioCtx.destination);
+      console.log('[Coach] Audio capture dual iniciada');
     } catch (e) {
       console.error('[Coach] AudioContext error:', e);
       toast('Error de audio: ' + e.message, 'error');
     }
   }
- 
-  // ─── DEEPGRAM vía WORKER ───────────────────────────────────
-  function connectDeepgram() {
+
+  // ─── DEEPGRAM DIRECTO (con token temporal) ─────────────────
+  function connectDeepgramDirect(accessToken) {
     const params = [
       'model=nova-2-general', 'language=multi',
       'interim_results=true', 'endpointing=300',
       'utterance_end_ms=1000', 'smart_format=true', 'punctuate=true',
       'encoding=linear16', 'sample_rate=16000', 'channels=2', 'multichannel=true'
     ].join('&');
- 
-    const url = workerWsUrl('/deepgram?' + params);
-    console.log('[Coach] Conectando al Worker...', url);
-    dgSocket = new WebSocket(url);
- 
+
+    const url = 'wss://api.deepgram.com/v1/listen?' + params;
+    console.log('[Coach] Conectando DIRECTO a Deepgram...');
+    dgSocket = new WebSocket(url, ['token', accessToken]);
+
     dgSocket.onopen = function () {
-      console.log('[Coach] Worker WS abierto');
+      console.log('[Coach] Deepgram WS abierto ✓');
       setStatus('live');
     };
     dgSocket.onmessage = function (event) {
@@ -154,28 +181,32 @@
         const msg = JSON.parse(event.data);
         if (msg.type === 'Results') handleTranscript(msg);
         else if (msg.type === 'UtteranceEnd') handleUtteranceEnd();
-      } catch (e) {}
+        else if (msg.type === 'Metadata') console.log('[Coach] Deepgram metadata:', msg);
+      } catch (e) { console.warn('[Coach] DG parse error', e); }
     };
     dgSocket.onerror = function (e) {
-      console.error('[Coach] WS error:', e);
-      toast('Error de conexión al Worker', 'error');
+      console.error('[Coach] Deepgram error:', e);
+      toast('Error de Deepgram', 'error');
     };
     dgSocket.onclose = function (e) {
-      console.log('[Coach] WS cerrado:', e.code);
+      console.log('[Coach] Deepgram cerrado:', e.code, e.reason);
+      if (e.code === 1011 || e.code === 1006) {
+        toast('Deepgram rechazó conexión. ¿Token mal o sin saldo?', 'error');
+      }
     };
   }
- 
+
   function handleTranscript(msg) {
     const alt = msg.channel && msg.channel.alternatives && msg.channel.alternatives[0];
     if (!alt || !alt.transcript) return;
     const text = alt.transcript.trim();
     if (!text) return;
- 
+
     const channelIdx = (msg.channel_index && msg.channel_index[0]) || 0;
     const speaker = channelIdx === 1 ? 'SDR' : 'Lead';
     const isFinal = msg.is_final;
     showInterim(speaker, text, isFinal);
- 
+
     if (isFinal) {
       utteranceBuffer.push({ speaker: speaker, text: text, ts: new Date() });
       recentTranscript.push(speaker + ': ' + text);
@@ -184,36 +215,31 @@
       enqueueChunkForBackend({ speaker: speaker, text: text, ts: new Date().toISOString() });
     }
   }
- 
+
   function handleUtteranceEnd() {
     const trigger = cfg.COACH_TRIGGER_UTTERANCES || 2;
     if (utteranceBuffer.length >= trigger && !coachInFlight) runCoaching();
   }
- 
-  // ─── COACHING via WORKER ───────────────────────────────────
+
+  // ─── COACHING via WORKER /openai ───────────────────────────
   async function runCoaching() {
     if (coachInFlight) return;
     coachInFlight = true;
     showThinking();
- 
+
     const context = recentTranscript.slice(-15).join('\n');
     const systemPrompt = [
       'Eres el coach de ventas de Predictable.ai en vivo durante una llamada B2B.',
-      'La conversación tiene 2 hablantes: "Lead" (prospecto) y "SDR" (vendedor).',
+      'La conversación tiene 2 hablantes: "Lead" y "SDR".',
       'OUTPUT: SOLO JSON con schema:',
       '{',
-      '  "alerts": [{',
-      '    "type": "objection|positive_signal|risk|stage_guidance",',
-      '    "title": "string corta",',
-      '    "explanation": "máx 2 frases",',
-      '    "suggested_phrase": "frase para que el SDR diga AHORA"',
-      '  }],',
+      '  "alerts": [{ "type":"objection|positive_signal|risk|stage_guidance", "title":"", "explanation":"", "suggested_phrase":"" }],',
       '  "stage": "rapport|discovery|reframe|demo|negotiation|close",',
-      '  "next_step": "1 acción inmediata"',
+      '  "next_step": ""',
       '}',
-      'Habla español neutro. NO inventes alertas.'
+      'Español neutro. NO inventes alertas.'
     ].join('\n');
- 
+
     try {
       const resp = await fetch(workerUrl('/openai'), {
         method: 'POST',
@@ -228,10 +254,7 @@
           ]
         })
       });
-      if (!resp.ok) {
-        console.error('Worker OpenAI ' + resp.status + ': ' + await resp.text());
-        hideThinking(); coachInFlight = false; return;
-      }
+      if (!resp.ok) { console.error('OpenAI ' + resp.status + ': ' + await resp.text()); hideThinking(); coachInFlight = false; return; }
       const data = await resp.json();
       const content = data.choices && data.choices[0] && data.choices[0].message.content;
       if (!content) throw new Error('vacío');
@@ -245,21 +268,20 @@
       hideThinking();
     } finally { coachInFlight = false; }
   }
- 
-  // ─── Persistencia, UI, end(), cleanup() — IGUAL que antes ──
+
+  // ─── Persistencia, UI, end(), cleanup() ────────────────────
   function enqueueChunkForBackend(c) { chunkQueue.push(c); if (chunkQueue.length >= 3) flushChunks(); }
   async function flushChunks() {
     if (!currentMeetingId || chunkQueue.length === 0) return;
     const batch = chunkQueue.splice(0);
     try { await global.api.ingestLocalChunks({ meeting_id: currentMeetingId, chunks: batch }); }
-    catch (e) { console.warn(e); chunkQueue = batch.concat(chunkQueue); }
+    catch (e) { chunkQueue = batch.concat(chunkQueue); }
   }
   async function enqueueEventForBackend(ev) {
     if (!currentMeetingId) return;
-    try { await global.api.ingestLocalEvent({ meeting_id: currentMeetingId, event: ev }); }
-    catch (e) {}
+    try { await global.api.ingestLocalEvent({ meeting_id: currentMeetingId, event: ev }); } catch (e) {}
   }
- 
+
   function clearUI() {
     const t = document.getElementById('mc-transcript'); if (t) t.innerHTML = '';
     const e = document.getElementById('mc-events');
@@ -267,8 +289,7 @@
     hideThinking();
   }
   function showInterim(speaker, text, isFinal) {
-    const el = document.getElementById('mc-last-spoken');
-    if (!el) return;
+    const el = document.getElementById('mc-last-spoken'); if (!el) return;
     const color = speaker === 'SDR' ? 'var(--green)' : 'var(--teal)';
     el.innerHTML =
       '<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">' +
@@ -282,20 +303,13 @@
     const color = speaker === 'SDR' ? 'var(--green)' : 'var(--teal)';
     const div = document.createElement('div');
     div.innerHTML = '<span style="color:' + color + ';font-weight:700">' + esc(speaker) + ':</span> <span style="color:var(--text2)">' + esc(text) + '</span>';
-    c.appendChild(div);
-    c.scrollTop = c.scrollHeight;
+    c.appendChild(div); c.scrollTop = c.scrollHeight;
   }
   function renderCoachOutput(out) {
     const events = document.getElementById('mc-events'); if (!events) return;
     (out.alerts || []).forEach(function (a) { events.prepend(buildAlertCard(a)); });
-    if (out.stage) {
-      const stEl = document.getElementById('mc-stage');
-      if (stEl) stEl.textContent = out.stage.charAt(0).toUpperCase() + out.stage.slice(1);
-    }
-    if (out.next_step) {
-      const ns = document.getElementById('mc-next-steps');
-      if (ns) ns.innerHTML = '<div style="font-size:12px;padding:6px 8px;background:var(--surface2);border-radius:6px">' + esc(out.next_step) + '</div>';
-    }
+    if (out.stage) { const stEl = document.getElementById('mc-stage'); if (stEl) stEl.textContent = out.stage.charAt(0).toUpperCase() + out.stage.slice(1); }
+    if (out.next_step) { const ns = document.getElementById('mc-next-steps'); if (ns) ns.innerHTML = '<div style="font-size:12px;padding:6px 8px;background:var(--surface2);border-radius:6px">' + esc(out.next_step) + '</div>'; }
   }
   function buildAlertCard(alert) {
     const card = document.createElement('div');
@@ -307,8 +321,7 @@
                '<div class="ai-text">' + esc(alert.explanation || '') + '</div>';
     if (alert.suggested_phrase) {
       const phrase = esc(alert.suggested_phrase);
-      html += '<div style="background:var(--surface2);border-radius:6px;padding:10px;margin-top:8px;font-size:12px;line-height:1.7">' +
-        '<strong style="color:' + color + '">Di esto:</strong><br>' + phrase + '</div>';
+      html += '<div style="background:var(--surface2);border-radius:6px;padding:10px;margin-top:8px;font-size:12px;line-height:1.7"><strong style="color:' + color + '">Di esto:</strong><br>' + phrase + '</div>';
     }
     card.innerHTML = html;
     return card;
@@ -324,7 +337,7 @@
   function hideThinking() { const el = document.getElementById('mc-thinking'); if (el) el.remove(); }
   function setStatus(s) {
     const el = document.getElementById('mc-status'); if (!el) return;
-    const map = { connecting: 'Conectando al audio...', live: '🎙 Escuchando (tú + lead)', ended: 'Sesión finalizada' };
+    const map = { connecting: 'Conectando...', live: '🎙 Escuchando (tú + lead)', ended: 'Sesión finalizada' };
     el.textContent = map[s] || s;
   }
   function updateElapsed() {
@@ -360,6 +373,6 @@
       return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
     });
   }
- 
+
   global.realtimeCoach = { start: start, end: end, isActive: function() { return active; } };
 })(window);
