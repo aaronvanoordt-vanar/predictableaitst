@@ -168,9 +168,10 @@
       'encoding=linear16', 'sample_rate=16000', 'channels=2', 'multichannel=true'
     ].join('&');
 
-    const url = 'wss://api.deepgram.com/v1/listen?' + params;
-    console.log('[Coach] Conectando DIRECTO a Deepgram...');
-    dgSocket = new WebSocket(url, ['token', accessToken]);
+    // Deepgram Grant Tokens (JWT) se pasan como query parameter access_token
+    const url = 'wss://api.deepgram.com/v1/listen?' + params + '&access_token=' + encodeURIComponent(accessToken);
+    console.log('[Coach] Conectando DIRECTO a Deepgram (JWT en query)...');
+    dgSocket = new WebSocket(url);
 
     dgSocket.onopen = function () {
       console.log('[Coach] Deepgram WS abierto ✓');
