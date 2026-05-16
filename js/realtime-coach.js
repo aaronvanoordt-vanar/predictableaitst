@@ -137,14 +137,14 @@
         if (!dgSocket || dgSocket.readyState !== WebSocket.OPEN) return;
         const left = e.inputBuffer.getChannelData(0);
         const right = e.inputBuffer.numberOfChannels > 1 ? e.inputBuffer.getChannelData(1) : new Float32Array(left.length);
-        const interleaved = new Int16Array(left.length * 2);
+        // Mezclar en mono: (L + R) / 2
+        const mono = new Int16Array(left.length);
         for (let i = 0; i < left.length; i++) {
-          const sL = Math.max(-1, Math.min(1, left[i]));
-          const sR = Math.max(-1, Math.min(1, right[i]));
-          interleaved[i*2] = sL < 0 ? sL * 0x8000 : sL * 0x7FFF;
-          interleaved[i*2+1] = sR < 0 ? sR * 0x8000 : sR * 0x7FFF;
+          const mixed = (left[i] + right[i]) * 0.5;
+          const s = Math.max(-1, Math.min(1, mixed));
+          mono[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
         }
-        dgSocket.send(interleaved.buffer);
+        dgSocket.send(mono.buffer);
         frameCount++;
         if (frameCount === 1) console.log('[Coach] Primer frame de audio enviado a Deepgram');
         if (frameCount % 100 === 0) console.log('[Coach] Frames enviados:', frameCount);
@@ -161,17 +161,20 @@
 
   // ─── DEEPGRAM DIRECTO (con token temporal) ─────────────────
   function connectDeepgramDirect(accessToken) {
+    // Parámetros simples: mono primero para descartar problemas de multichannel
     const params = [
-      'model=nova-2-general', 'language=multi',
+      'model=nova-2', 'language=multi',
       'interim_results=true', 'endpointing=300',
       'utterance_end_ms=1000', 'smart_format=true', 'punctuate=true',
-      'encoding=linear16', 'sample_rate=16000', 'channels=2', 'multichannel=true'
+      'encoding=linear16', 'sample_rate=16000', 'channels=1'
     ].join('&');
 
-    // Deepgram Grant Tokens (JWT) se pasan como query parameter access_token
-    const url = 'wss://api.deepgram.com/v1/listen?' + params + '&access_token=' + encodeURIComponent(accessToken);
-    console.log('[Coach] Conectando DIRECTO a Deepgram (JWT en query)...');
-    dgSocket = new WebSocket(url);
+    // JWT Grant Token: probamos primero como subprotocol bearer (forma correcta)
+    const url = 'wss://api.deepgram.com/v1/listen?' + params;
+    console.log('[Coach] URL Deepgram:', url);
+    console.log('[Coach] Token (primeros 30 chars):', accessToken.substring(0, 30) + '...');
+    // Pasar JWT como Bearer en subprotocol
+    dgSocket = new WebSocket(url, ['bearer', accessToken]);
 
     dgSocket.onopen = function () {
       console.log('[Coach] Deepgram WS abierto ✓');
@@ -190,9 +193,9 @@
       toast('Error de Deepgram', 'error');
     };
     dgSocket.onclose = function (e) {
-      console.log('[Coach] Deepgram cerrado:', e.code, e.reason);
-      if (e.code === 1011 || e.code === 1006) {
-        toast('Deepgram rechazó conexión. ¿Token mal o sin saldo?', 'error');
+      console.log('[Coach] Deepgram cerrado:', e.code, e.reason || '(sin razón)', 'wasClean:', e.wasClean);
+      if (!e.wasClean && (e.code === 1011 || e.code === 1006 || e.code === 1002)) {
+        toast('Deepgram rechazó conexión (' + e.code + '). Revisa consola para detalles.', 'error');
       }
     };
   }
